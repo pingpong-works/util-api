@@ -35,7 +35,7 @@ public class Board extends Auditable {
 
     @Column(name = "board_image_url")
     @ElementCollection
-    private List<String> imageUrl = new ArrayList<>();
+    private List<String> imageUrls = new ArrayList<>();
 
     @Column(name = "employee_id")
     private Long employeeId;
