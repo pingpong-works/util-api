@@ -31,7 +31,7 @@ public class BoardCommentService {
     }
 
     public BoardComment createBoardComment(BoardComment boardComment, long employeeId) throws IllegalArgumentException {
-        Map<String, Object> employee = employeeFeignClient.getEmployeeById(employeeId);
+//        Map<String, Object> employee = employeeFeignClient.getEmployeeById(employeeId);
 
 //        if (employee.containsKey("employeeId")) {
 //            Long fetchEmployeeId = (Long) employee.get("employeeId");
@@ -55,6 +55,7 @@ public class BoardCommentService {
                 boardComment.setParentComment(null);
             }
 
+            boardComment.setEmployeeId(employeeId); // feign 사용시 지워야됨
             board.setCommentCount(board.getCommentCount() + 1);
             boardRepository.save(board);
             return boardCommentRepository.save(boardComment);

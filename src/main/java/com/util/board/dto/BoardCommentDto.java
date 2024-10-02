@@ -21,6 +21,7 @@ public class BoardCommentDto {
 
     @Getter
     @Setter
+    @NoArgsConstructor
     @AllArgsConstructor
     public static class Patch {
         @NotBlank
