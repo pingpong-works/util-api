@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Getter
@@ -17,8 +17,8 @@ public class Car {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long carId;
 
-    @Column(name = "car_type")
-    private String type;
+    @Column(name = "car_name")
+    private String name;
 
     @Column(name = "car_number")
     private String number;
@@ -27,7 +27,7 @@ public class Car {
     @CollectionTable(name = "car_images", joinColumns = @JoinColumn(name = "car_id"))
     @MapKeyColumn(name = "car_image_url")
     @Column(name = "car_image_description")
-    private Map<String, String> images = new HashMap<>();
+    private Map<String, String> images = new LinkedHashMap<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "car_fuel_type")

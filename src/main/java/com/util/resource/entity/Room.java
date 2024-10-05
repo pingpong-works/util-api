@@ -24,7 +24,6 @@ public class Room {
     private int maxCapacity;
 
     @ElementCollection
-    @CollectionTable(name = "room_equipment", joinColumns = @JoinColumn(name = "room_id"))
     @Column(name = "equipment_name")
     private List<String> equipment = new ArrayList<>();
 
