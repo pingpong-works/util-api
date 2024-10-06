@@ -14,6 +14,9 @@ public enum ExceptionCode {
     //employee 관련
     EMPLOYEE_NOT_FOUND(404,"Employee Not Found"),
 
+    //department 관련
+    DEPARTMENT_NOT_FOUND(404,"Department Not Found"),
+
     //resource 관련
     CAR_UNAUTHORIZED_ACTION(403, "Car Unauthorized Action"),
     CAR_NOT_FOUND(404, "Car Not Found"),
@@ -25,7 +28,11 @@ public enum ExceptionCode {
     CAR_BOOK_NOT_FOUND(404, "Car Book Not Found"),
     ROOM_BOOK_UNAUTHORIZED_ACTION(403, "Room Book Unauthorized Action"),
     ROOM_BOOK_NOT_FOUND(404, "Room Book Not Found"),
-    BOOK_CONFLICT_BOOKING(409, "Book Conflict Booking");
+    BOOK_CONFLICT_BOOKING(409, "Book Conflict Booking"),
+
+    //calendar 관련
+    CALENDAR_UNAUTHORIZED_ACTION(403, "Calendar Unauthorized Action"),
+    CALENDAR_NOT_FOUND(404, "Calendar Not Found");
 
 
     @Getter
