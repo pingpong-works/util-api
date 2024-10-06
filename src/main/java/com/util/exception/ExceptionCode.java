@@ -18,7 +18,14 @@ public enum ExceptionCode {
     CAR_UNAUTHORIZED_ACTION(403, "Car Unauthorized Action"),
     CAR_NOT_FOUND(404, "Car Not Found"),
     ROOM_UNAUTHORIZED_ACTION(403, "Room UnAuthorized Action"),
-    ROOM_NOT_FOUND(404, "Room Not Found");
+    ROOM_NOT_FOUND(404, "Room Not Found"),
+
+    //book 관련
+    CAR_BOOK_UNAUTHORIZED_ACTION(403, "Car Book Unauthorized Action"),
+    CAR_BOOK_NOT_FOUND(404, "Car Book Not Found"),
+    ROOM_BOOK_UNAUTHORIZED_ACTION(403, "Room Book Unauthorized Action"),
+    ROOM_BOOK_NOT_FOUND(404, "Room Book Not Found"),
+    BOOK_CONFLICT_BOOKING(409, "Book Conflict Booking");
 
 
     @Getter

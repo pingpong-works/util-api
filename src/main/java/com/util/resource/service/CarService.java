@@ -56,9 +56,9 @@ public class CarService {
                 .ifPresent(name -> findCar.setName(name));
         Optional.ofNullable(car.getNumber())
                 .ifPresent(number -> findCar.setNumber(number));
-        Optional.of(car.isAvailable())
+        Optional.ofNullable(car.isAvailable())
                 .ifPresent(available -> findCar.setAvailable(available));
-        Optional.of(car.getFuel())
+        Optional.ofNullable(car.getFuel())
                 .ifPresent(fuelType -> findCar.setFuel(fuelType));
 
         Optional.ofNullable(car.getImages())
