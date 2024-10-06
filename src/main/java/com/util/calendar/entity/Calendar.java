@@ -28,7 +28,7 @@ public class Calendar {
     private LocalDateTime startTime;
 
     @Column(name = "calendar_end_time")
-    private LocalDateTime end;
+    private LocalDateTime endTime;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "calendar_book_type")
