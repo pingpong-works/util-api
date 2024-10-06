@@ -57,7 +57,7 @@ public class RoomService {
                 .ifPresent(maxCapacity -> findRoom.setMaxCapacity(maxCapacity));
         Optional.ofNullable(room.getLocation())
                 .ifPresent(location -> findRoom.setLocation(location));
-        Optional.of(room.isAvailable())
+        Optional.ofNullable(room.isAvailable())
                 .ifPresent(available -> findRoom.setAvailable(available));
 
         Optional.ofNullable(room.getEquipment())

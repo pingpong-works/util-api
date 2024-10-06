@@ -1,5 +1,6 @@
 package com.util.resource.entity;
 
+import com.util.book.entity.RoomBook;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -32,4 +33,14 @@ public class Room {
 
     @Column(name = "room_available")
     private boolean available = true;
+
+    @OneToMany(mappedBy = "room", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<RoomBook> roomBooks = new ArrayList<>();
+
+    public void setRoomBooks(RoomBook roomBook) {
+        roomBooks.add(roomBook);
+        if (roomBook.getRoom() != this) {
+            roomBook.setRoom(this);
+        }
+    }
 }

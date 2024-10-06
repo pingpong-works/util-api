@@ -1,11 +1,14 @@
 package com.util.resource.entity;
 
+import com.util.book.entity.CarBook;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 @Getter
@@ -31,12 +34,22 @@ public class Car {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "car_fuel_type")
-    private fuelType fuel = fuelType.GASOLINE;
+    private FuelType fuel = FuelType.GASOLINE;
 
     @Column(name = "car_available")
     private boolean available = true;
 
-    public enum fuelType {
+    @OneToMany(mappedBy = "car", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<CarBook> carBooks = new ArrayList<>();
+
+    public void setCarBooks(CarBook carBook) {
+        carBooks.add(carBook);
+        if (carBook.getCar() != this) {
+            carBook.setCar(this);
+        }
+    }
+
+    public enum FuelType {
         GASOLINE("휘발유"),
         DIESEL("경유"),
         LPG("LPG"),
@@ -44,7 +57,7 @@ public class Car {
 
         @Getter
         private final String fuel;
-        fuelType(String fuel) {
+        FuelType(String fuel) {
             this.fuel = fuel;
         }
     }
