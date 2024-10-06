@@ -20,7 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/boards/{board-id}/comments")
 public class BoardCommentController {
-    private final static String POST_COMMENT_DEFAULT_URL = "/boards/{board-id}/comments";
+    private final static String BOARD_COMMENT_DEFAULT_URL = "/boards/{board-id}/comments";
     private final BoardCommentService boardCommentService;
     private final BoardService boardService;
     private final BoardCommentMapper mapper;
@@ -43,7 +43,7 @@ public class BoardCommentController {
 
         BoardComment createBoardComment = boardCommentService.createBoardComment(boardComment, employeeId);
 
-        URI location = UriCreator.createUri(POST_COMMENT_DEFAULT_URL.replace("{board-id}", String.valueOf(boardId)), createBoardComment.getBoardCommentId());
+        URI location = UriCreator.createUri(BOARD_COMMENT_DEFAULT_URL.replace("{board-id}", String.valueOf(boardId)), createBoardComment.getBoardCommentId());
         return ResponseEntity.created(location).build();
     }
 
