@@ -37,6 +37,16 @@ dependencies {
 	implementation "org.springframework.cloud:spring-cloud-starter-config"
 	implementation "org.springframework.cloud:spring-cloud-starter-bootstrap"
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+	// mysql
+	implementation 'mysql:mysql-connector-java'
+
+	// Mapstruct
+	implementation 'org.mapstruct:mapstruct:1.5.1.Final'
+	annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.1.Final'
+
+	// OpenFeign
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 }
 
 dependencyManagement {
