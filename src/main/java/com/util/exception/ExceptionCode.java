@@ -7,19 +7,19 @@ import lombok.Getter;
 public enum ExceptionCode {
 
     //board 관련
-    BOARD_UNAUTHORIZED_ACTION(403, "Board_Unauthorized_Action"),
+    BOARD_UNAUTHORIZED_ACTION(403, "Board Unauthorized Action"),
     BOARD_NOT_FOUND(404,"Board Not Found"),
-    BOARD_COMMENT_NOT_FOUND(404,"Board_Comment Not Found"),
-    BOARD_IMAGE_NOT_FOUND(404,"Board_Image Not Found"),
-    BOARD_EXISTS(409,"Board exists"),
-    INVALID_BOARD_TYPE(400,"INVALID_BOARD_TYPE"),
+    BOARD_COMMENT_NOT_FOUND(404,"Board Comment Not Found"),
 
     //employee 관련
     EMPLOYEE_NOT_FOUND(404,"Employee Not Found"),
 
-    // 토큰 인증 관련
-    UNAUTHORIZED_MEMBER(401, "권한이 없는 멤버입니다."),
-    TOKEN_INVALID(404, "토큰값이 유효하지 않습니다.");
+    //resource 관련
+    CAR_UNAUTHORIZED_ACTION(403, "Car Unauthorized Action"),
+    CAR_NOT_FOUND(404, "Car Not Found"),
+    ROOM_UNAUTHORIZED_ACTION(403, "Room UnAuthorized Action"),
+    ROOM_NOT_FOUND(404, "Room Not Found");
+
 
     @Getter
     private int statusCode;
