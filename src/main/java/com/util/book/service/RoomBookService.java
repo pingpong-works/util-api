@@ -6,12 +6,16 @@ import com.util.book.repository.RoomBookRepository;
 import com.util.exception.BusinessLogicException;
 import com.util.exception.ExceptionCode;
 import com.util.feign.EmployeeFeignClient;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Transactional
+@Service
 public class RoomBookService {
     private final RoomBookRepository roomBookRepository;
     private final EmployeeFeignClient employeeFeignClient;
@@ -22,7 +26,7 @@ public class RoomBookService {
         this.employeeFeignClient = employeeFeignClient;
     }
 
-    public RoomBook createroomBook(RoomBook roomBook, long employeeId) throws IllegalArgumentException {
+    public RoomBook createRoomBook(RoomBook roomBook, long employeeId) throws IllegalArgumentException {
         // employee 호출할 경우 사용하는 코드
 //        Map<String, Object> employee = employeeFeignClient.getEmployeeById(employeeId);
 //
@@ -45,7 +49,8 @@ public class RoomBookService {
 //            throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
 //        }
 
-        // employee없이 사용하는 일반 코드, 현재 board에는 username이 null로 저장됨
+        // employee없이 사용하는 일반 코드, 현재 roomBook에는 username이 null로 저장됨
+        roomBook.setEmployeeId(employeeId);
         boolean isOverlapping = roomBookRepository.existsOverlappingBooking(
                 roomBook.getRoom().getRoomId(), roomBook.getBookStart(), roomBook.getBookEnd());
         if (isOverlapping) {
@@ -55,20 +60,29 @@ public class RoomBookService {
         return roomBookRepository.save(roomBook);
     }
 
-    public RoomBook updateroomBook(RoomBook roomBook, long roomBookId, long employeeId) {
+    public RoomBook updateRoomBook(RoomBook roomBook, long roomBookId, long employeeId) {
         RoomBook findRoomBook = findVerifiedroomBook(roomBookId);
 
-        if (findRoomBook.getEmployeeId() != employeeId) {
-            throw new BusinessLogicException(ExceptionCode.ROOM_BOOK_UNAUTHORIZED_ACTION);
-        }
+        LocalDateTime originalBookStart = findRoomBook.getBookStart();
+        LocalDateTime originalBookEnd = findRoomBook.getBookEnd();
 
+        // 새로운 예약 시간이 있는 경우에만 중복 검사 수행
         if (roomBook.getBookStart() != null && roomBook.getBookEnd() != null) {
+            // 일단 DB에서 기존 시간을 제외한 상태로 중복 예약 체크 수행
+            findRoomBook.setBookStart(null);
+            findRoomBook.setBookEnd(null);
+            roomBookRepository.save(findRoomBook); // 중복 예약 검사 전에 기존 시간을 일시적으로 제거
+
             boolean isOverlapping = roomBookRepository.existsOverlappingBooking(
                     findRoomBook.getRoom().getRoomId(),
                     roomBook.getBookStart(),
                     roomBook.getBookEnd()
             );
+
+            // 중복이 발생한 경우, 원래 시간을 복원하고 예외 처리
             if (isOverlapping) {
+                findRoomBook.setBookStart(originalBookStart);
+                findRoomBook.setBookEnd(originalBookEnd);
                 throw new BusinessLogicException(ExceptionCode.BOOK_CONFLICT_BOOKING);
             }
         }
@@ -85,14 +99,14 @@ public class RoomBookService {
         return roomBookRepository.save(findRoomBook);
     }
 
-    public RoomBook findroomBook(long roomBookId) {
+    public RoomBook findRoomBook(long roomBookId) {
         RoomBook findRoomBook = findVerifiedroomBook(roomBookId);
         return findRoomBook;
     }
 
     @Transactional(readOnly = true)
-    public List<RoomBook> findAllRoomBooks() {
-        return roomBookRepository.findAll();
+    public List<RoomBook> findAllByRoomId(long roomId) {
+        return roomBookRepository.findAllByRoom_roomId(roomId);
     }
 
     public void deleteRoomBook(long roomBookId, long employeeId) {

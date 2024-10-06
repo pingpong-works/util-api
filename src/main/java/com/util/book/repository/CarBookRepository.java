@@ -6,10 +6,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface CarBookRepository extends JpaRepository<CarBook, Long> {
     @Query("SELECT COUNT(cb) > 0 FROM CarBook cb WHERE cb.car.carId = :carId AND (:bookStart < cb.bookEnd AND :bookEnd > cb.bookStart)")
     boolean existsOverlappingBooking(@Param("carId") Long carId,
                                      @Param("bookStart") LocalDateTime bookStart,
                                      @Param("bookEnd") LocalDateTime bookEnd);
+    @Query("SELECT cb FROM CarBook cb WHERE cb.car.carId = :carId")
+    List<CarBook> findAllByCar_CarId(@Param("carId") long carId);
 }
