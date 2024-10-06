@@ -25,7 +25,6 @@ public class CarDto {
         @NotNull
         private Car.fuelType fuel;
 
-        @NotNull
         private Map<String, String> images;
     }
 
@@ -40,7 +39,9 @@ public class CarDto {
 
         private Map<String, String> images;
 
-        private boolean available;
+        private List<String> imagesToDelete;
+
+        private Boolean available;
     }
 
     @Getter

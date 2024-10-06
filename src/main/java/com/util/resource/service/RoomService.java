@@ -68,7 +68,7 @@ public class RoomService {
         return roomRepository.save(findRoom);
     }
 
-    public Room findroom(long roomId) {
+    public Room findRoom(long roomId) {
         Room findRoom = findVerifiedRoom(roomId);
         return findRoom;
     }

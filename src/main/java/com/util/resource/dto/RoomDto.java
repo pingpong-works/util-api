@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import java.util.List;
 
@@ -21,7 +20,6 @@ public class RoomDto {
         @Positive
         private int maxCapacity;
 
-        @NotNull
         private List<String> equipment;
 
         @NotBlank
@@ -37,9 +35,11 @@ public class RoomDto {
 
         private List<String> equipment;
 
+        private List<String> equipmentsToDelete;
+
         private String location;
 
-        private boolean available;
+        private Boolean available;
     }
 
     @Getter
