@@ -36,6 +36,8 @@ public class BoardDto {
         private String category;
 
         private List<String> imageUrls;
+
+        private List<String> imagesToDelete;
     }
 
     @Getter

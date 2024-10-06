@@ -10,14 +10,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 
 
 @Transactional
 @Service
-public class
-BoardService {
+public class BoardService {
     private final BoardRepository boardRepository;
     private final EmployeeFeignClient employeeFeignClient;
 
@@ -49,7 +48,7 @@ BoardService {
         return boardRepository.save(board);
     }
 
-    public Board updateBoard(Board board, long boardId, long employeeId) throws IllegalArgumentException {
+    public Board updateBoard(Board board, long boardId, long employeeId, List<String> imagesToDelete) throws IllegalArgumentException {
         Board findBoard = findVerifiedBoard(boardId);
 
         if (findBoard.getEmployeeId() != employeeId) {
@@ -59,11 +58,14 @@ BoardService {
         Optional.ofNullable(board.getTitle())
                 .ifPresent(title -> findBoard.setTitle(title));
         Optional.ofNullable(board.getContent())
-                .ifPresent(content -> findBoard.setTitle(content));
+                .ifPresent(content -> findBoard.setContent(content));
         Optional.ofNullable(board.getCategory())
-                .ifPresent(category -> findBoard.setTitle(category));
+                .ifPresent(category -> findBoard.setCategory(category));
 
-        findBoard.setImageUrls(board.getImageUrls());
+        Optional.ofNullable(board.getImageUrls())
+                .ifPresent(images -> findBoard.getImageUrls().addAll(images));
+        Optional.ofNullable(imagesToDelete)
+                .ifPresent(toDelete -> toDelete.forEach(url -> findBoard.getImageUrls().remove(url)));
 
         return boardRepository.save(findBoard);
     }
