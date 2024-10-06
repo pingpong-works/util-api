@@ -23,7 +23,7 @@ public class CarDto {
         private String number;
 
         @NotNull
-        private Car.fuelType fuel;
+        private Car.FuelType fuel;
 
         private Map<String, String> images;
     }
@@ -35,7 +35,7 @@ public class CarDto {
 
         private String number;
 
-        private Car.fuelType fuel;
+        private Car.FuelType fuel;
 
         private Map<String, String> images;
 
@@ -52,7 +52,7 @@ public class CarDto {
         private long carId;
         private String name;
         private String number;
-        private Car.fuelType fuel;
+        private Car.FuelType fuel;
         private boolean available;
         private Map<String, String> images;
     }
