@@ -49,7 +49,10 @@ public class BoardController {
                                      @Valid @RequestBody BoardDto.Patch requestBody,
                                      @RequestParam("employeeId") @Positive long employeeId) {
         Board board = mapper.boardPatchDtoToBoard(requestBody);
-        Board updateBoard = boardService.updateBoard(board, boardId, employeeId);
+
+        List<String> imagesToDelete = requestBody.getImagesToDelete();
+
+        Board updateBoard = boardService.updateBoard(board, boardId, employeeId, imagesToDelete);
         return new ResponseEntity<>(
                 new SingleResponseDto<>(mapper.boardToBoardResponseDto(updateBoard)), HttpStatus.OK);
     }
