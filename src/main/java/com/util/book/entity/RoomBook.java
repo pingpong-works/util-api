@@ -1,5 +1,6 @@
 package com.util.book.entity;
 
+import com.util.calendar.entity.Calendar;
 import com.util.resource.entity.Room;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -7,6 +8,8 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -46,6 +49,16 @@ public class RoomBook {
         this.room = room;
         if (!room.getRoomBooks().contains(this)) {
             room.getRoomBooks().add(this);
+        }
+    }
+
+    @OneToMany(mappedBy = "roomBook", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Calendar> calendars = new ArrayList<>();
+
+    public void setCalendar(Calendar calendar) {
+        calendars.add(calendar);
+        if (calendar.getRoomBook() != this) {
+            calendar.setRoomBook(this);
         }
     }
 
