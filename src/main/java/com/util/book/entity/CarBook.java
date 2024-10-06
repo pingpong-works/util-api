@@ -1,12 +1,15 @@
 package com.util.book.entity;
 
 import com.util.resource.entity.Car;
+import com.util.calendar.entity.Calendar;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -46,6 +49,16 @@ public class CarBook {
         this.car = car;
         if (!car.getCarBooks().contains(this)) {
             car.getCarBooks().add(this);
+        }
+    }
+
+    @OneToMany(mappedBy = "carBook", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Calendar> calendars = new ArrayList<>();
+
+    public void setCalendar(Calendar calendar) {
+        calendars.add(calendar);
+        if (calendar.getCarBook() != this) {
+            calendar.setCarBook(this);
         }
     }
 
