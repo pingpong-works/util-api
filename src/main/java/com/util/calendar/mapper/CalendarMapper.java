@@ -1,6 +1,5 @@
 package com.util.calendar.mapper;
 
-import com.util.book.dto.CarBookDto;
 import com.util.calendar.dto.CalendarDto;
 import com.util.calendar.entity.Calendar;
 import org.mapstruct.Mapper;
@@ -16,5 +15,5 @@ public interface CalendarMapper {
 
     CalendarDto.Response calendarToCalendarResponseDto(Calendar calendar);
 
-    List<CarBookDto.Response> calendarToCalendarResponseDtos(List<Calendar> calendars);
+    List<CalendarDto.Response> calendarToCalendarResponseDtos(List<Calendar> calendars);
 }
