@@ -26,7 +26,17 @@ public class ApprovalProducer {
                 .typeId(carBookId)
                 .type(NotificationMessage.NotificationType.CAR_BOOK)
                 .build();
-        kafkaTemplate.send("notice-topic",notificationMessage);
+        kafkaTemplate.send("book-car-topic",notificationMessage);
+    }
+
+    public void sendBookRoomNotification (Long employeeId, String message, Long roomBookId ) {
+        NotificationMessage notificationMessage = NotificationMessage.builder()
+                .message(message)
+                .employeeId(employeeId)
+                .typeId(roomBookId)
+                .type(NotificationMessage.NotificationType.ROOM_BOOK)
+                .build();
+        kafkaTemplate.send("book-room-topic",notificationMessage);
     }
 
 }
