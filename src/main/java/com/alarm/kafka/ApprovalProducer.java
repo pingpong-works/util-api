@@ -19,4 +19,14 @@ public class ApprovalProducer {
         kafkaTemplate.send("notice-topic",notificationMessage);
     }
 
+    public void sendBookCarNotification (Long employeeId, String message, Long carBookId ) {
+        NotificationMessage notificationMessage = NotificationMessage.builder()
+                .message(message)
+                .employeeId(employeeId)
+                .typeId(carBookId)
+                .type(NotificationMessage.NotificationType.CAR_BOOK)
+                .build();
+        kafkaTemplate.send("notice-topic",notificationMessage);
+    }
+
 }
