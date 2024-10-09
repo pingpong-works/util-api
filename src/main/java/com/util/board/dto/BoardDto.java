@@ -50,6 +50,7 @@ public class BoardDto {
         private String employeeName;
         private String title;
         private String content;
+        private String category;
         private int views;
         private int commentCount;
         private LocalDateTime createdAt;
