@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class ApprovalProducer {
+public class UtilProducer {
     private final KafkaTemplate<String, NotificationMessage> kafkaTemplate;
 
     public void sendNoticeNotification (Long employeeId, String message, Long boardId ) {
