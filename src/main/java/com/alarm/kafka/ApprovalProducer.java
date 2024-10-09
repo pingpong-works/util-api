@@ -24,7 +24,7 @@ public class ApprovalProducer {
                 .message(message)
                 .employeeId(employeeId)
                 .typeId(carBookId)
-                .type(NotificationMessage.NotificationType.CAR_BOOK)
+                .type(NotificationMessage.NotificationType.BOOK_CAR)
                 .build();
         kafkaTemplate.send("book-car-topic",notificationMessage);
     }
@@ -34,9 +34,19 @@ public class ApprovalProducer {
                 .message(message)
                 .employeeId(employeeId)
                 .typeId(roomBookId)
-                .type(NotificationMessage.NotificationType.ROOM_BOOK)
+                .type(NotificationMessage.NotificationType.BOOK_ROOM)
                 .build();
         kafkaTemplate.send("book-room-topic",notificationMessage);
+    }
+
+    public void sendCalendarNotification (Long employeeId, String message, Long calendarId ) {
+        NotificationMessage notificationMessage = NotificationMessage.builder()
+                .message(message)
+                .employeeId(employeeId)
+                .typeId(calendarId)
+                .type(NotificationMessage.NotificationType.CALENDAR)
+                .build();
+        kafkaTemplate.send("calendar-topic",notificationMessage);
     }
 
 }

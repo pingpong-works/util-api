@@ -13,8 +13,8 @@ public class NotificationMessage {
 
     public enum NotificationType {
         NOTICE,
-        CAR_BOOK,
-        ROOM_BOOK,
+        BOOK_CAR,
+        BOOK_ROOM,
         CALENDAR;
     }
 }
