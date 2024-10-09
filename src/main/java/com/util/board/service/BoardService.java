@@ -50,12 +50,10 @@ public class BoardService {
         board.setEmployeeId(employeeId);
         Board savedBoard = boardRepository.save(board);
 
+
+        //공지사항이 등록되었을 때 알림 발송 기능 (category = notice) > 전체 직원에게 발송...
         if(savedBoard.getCategory().equalsIgnoreCase("Notice")) {
-            utilProducer.sendNoticeNotification(
-                    savedBoard.getEmployeeId(),
-                    String.format("공지사항[%s]이 등록되었습니다.",savedBoard.getTitle()),
-                    savedBoard.getBoardId()
-            );
+            sendNoticeEmployees(savedBoard);
         }
 
         return savedBoard;
@@ -126,5 +124,19 @@ public class BoardService {
         Optional<Board> optionalBoard = boardRepository.findById(boardId);
         return optionalBoard.orElseThrow(() ->
                 new BusinessLogicException(ExceptionCode.BOARD_NOT_FOUND));
+    }
+
+    private void sendNoticeEmployees (Board savedBoard) {
+
+        List<Long> ids = employeeFeignClient.getEmployeeIds();
+
+        ids.forEach(id -> {
+            utilProducer.sendNoticeNotification(
+                    id,
+                    String.format("공지사항[%s]이 등록되었습니다.",savedBoard.getTitle()),
+                    savedBoard.getBoardId()
+            );
+        });
+
     }
 }
