@@ -1,6 +1,5 @@
 package com.util.calendar.dto;
 
-import com.util.calendar.entity.Calendar;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,8 +26,6 @@ public class CalendarDto {
         @NotNull
         private LocalDateTime endTime;
 
-        @NotNull
-        private Calendar.bookType book;
     }
 
     @Getter
@@ -53,7 +50,6 @@ public class CalendarDto {
         private String content;
         private LocalDateTime startTime;
         private LocalDateTime endTime;
-        private Calendar.bookType book;
         private long departmentId;
         private String name;
         private long carBookId;
