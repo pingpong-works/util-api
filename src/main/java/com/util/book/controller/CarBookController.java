@@ -4,6 +4,8 @@ import com.util.book.dto.CarBookDto;
 import com.util.book.entity.CarBook;
 import com.util.book.mapper.CarBookMapper;
 import com.util.book.service.CarBookService;
+import com.util.calendar.entity.Calendar;
+import com.util.calendar.service.CalendarService;
 import com.util.dto.SingleResponseDto;
 import com.util.resource.entity.Car;
 import com.util.resource.service.CarService;
@@ -23,13 +25,15 @@ import java.util.List;
 public class CarBookController {
     private final static String CAR_BOOK_DEFAULT_URL = "/cars/{car-id}/books";
     private final CarBookService carBookService;
+    private final CalendarService calendarService;
     private final CarService carService;
     private final CarBookMapper mapper;
 
-    public CarBookController(CarBookService carBookService,
+    public CarBookController(CarBookService carBookService, CalendarService calendarService,
                              CarService carService,
                              CarBookMapper mapper) {
         this.carBookService = carBookService;
+        this.calendarService = calendarService;
         this.carService = carService;
         this.mapper = mapper;
     }
@@ -37,9 +41,12 @@ public class CarBookController {
     @PostMapping
     public ResponseEntity postCarBook(@PathVariable("car-id") @Positive long carId,
                                       @Valid @RequestBody CarBookDto.Post requestBody,
+                                      @RequestParam("calendarId") @Positive long calendarId,
                                       @RequestParam("employeeId") @Positive long employeeId) {
         CarBook carBook = mapper.carBookPostDtoToCarBook(requestBody);
 
+        Calendar calendar = calendarService.findCalendar(calendarId);
+        carBook.setCalendar(calendar);
         Car car = carService.findVerifiedCar(carId);
         carBook.setCar(car);
 

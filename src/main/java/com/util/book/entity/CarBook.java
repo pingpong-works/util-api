@@ -34,7 +34,6 @@ public class CarBook {
     @Column(name = "car_book_status")
     private StatusType status = StatusType.PENDING;
 
-
     @Column(name = "employee_id")
     private Long employeeId;
 
@@ -52,12 +51,13 @@ public class CarBook {
         }
     }
 
-    @OneToMany(mappedBy = "carBook", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private List<Calendar> calendars = new ArrayList<>();
+    @ManyToOne
+    @JoinColumn(name = "calendar_id")
+    private Calendar calendar;
 
     public void setCalendar(Calendar calendar) {
-        calendars.add(calendar);
-        if (calendar.getCarBook() != this) {
+        this.calendar = calendar;
+        if (!calendar.getCarBooks().contains(this)) {
             calendar.setCarBook(this);
         }
     }
@@ -70,6 +70,7 @@ public class CarBook {
 
         @Getter
         private final String purpose;
+
         PurposeType(String purpose) {
             this.purpose = purpose;
         }
@@ -82,6 +83,7 @@ public class CarBook {
 
         @Getter
         private final String status;
+
         StatusType(String status) {
             this.status = status;
         }
