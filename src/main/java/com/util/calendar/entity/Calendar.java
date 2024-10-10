@@ -8,6 +8,8 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -30,47 +32,29 @@ public class Calendar {
     @Column(name = "calendar_end_time")
     private LocalDateTime endTime;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "calendar_book_type")
-    private bookType book = bookType.Car;
-
     @Column(name = "department_id")
     private Long departmentId;
 
     @Column(name = "department_name")
     private String name;
 
-    @ManyToOne
-    @JoinColumn(name = "car_book_id")
-    private CarBook carBook;
+    @OneToMany(mappedBy = "calendar", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<CarBook> carBooks = new ArrayList<>();
 
     public void setCarBook(CarBook carBook) {
-        this.carBook = carBook;
-        if (!carBook.getCalendars().contains(this)) {
-            carBook.getCalendars().add(this);
+        carBooks.add(carBook);
+        if (carBook.getCalendar() != this) {
+            carBook.setCalendar(this);
         }
     }
 
-    @ManyToOne
-    @JoinColumn(name = "room_book_id")
-    private RoomBook roomBook;
+    @OneToMany(mappedBy = "calendar", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<RoomBook> roomBooks = new ArrayList<>();
 
     public void setRoomBook(RoomBook roomBook) {
-        this.roomBook = roomBook;
-        if (!roomBook.getCalendars().contains(this)) {
-            roomBook.getCalendars().add(this);
-        }
-    }
-
-    public enum bookType {
-        Car("차 예약"),
-        Room("회의실 예약");
-
-
-        @Getter
-        private final String book;
-        bookType(String book) {
-            this.book = book;
+        roomBooks.add(roomBook);
+        if (roomBook.getCalendar() != this) {
+            roomBook.setCalendar(this);
         }
     }
 }
