@@ -1,13 +1,18 @@
 package com.util.calendar.service;
 
+import com.alarm.kafka.UtilProducer;
+import com.util.book.entity.RoomBook;
 import com.util.calendar.entity.Calendar;
 import com.util.calendar.repository.CalendarRepository;
 import com.util.exception.BusinessLogicException;
 import com.util.exception.ExceptionCode;
 import com.util.feign.DepartmentFeignClient;
+import com.util.feign.EmployeeFeignClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -17,11 +22,15 @@ import java.util.Optional;
 public class CalendarService {
     private final CalendarRepository calendarRepository;
     private final DepartmentFeignClient departmentFeignClient;
+    private final UtilProducer utilProducer;
+    private final EmployeeFeignClient employeeFeignClient;
 
     public CalendarService(CalendarRepository calendarRepository,
-                           DepartmentFeignClient departmentFeignClient) {
+                           DepartmentFeignClient departmentFeignClient, UtilProducer utilProducer, EmployeeFeignClient employeeFeignClient) {
         this.calendarRepository = calendarRepository;
         this.departmentFeignClient = departmentFeignClient;
+        this.utilProducer = utilProducer;
+        this.employeeFeignClient = employeeFeignClient;
     }
 
     public Calendar createCalendar(Calendar calendar, long departmentId) throws IllegalArgumentException {
@@ -43,7 +52,13 @@ public class CalendarService {
 
         // department없이 사용하는 일반 코드, 현재 calendar에는 name이 null로 저장됨
         calendar.setDepartmentId(departmentId);
-        return calendarRepository.save(calendar);
+
+        Calendar savedCalendar = calendarRepository.save(calendar);
+
+        //일정 등록시 알림 송부 기능
+        sendCalendarAlarm(savedCalendar, "등록되었습니다.");
+
+        return savedCalendar;
     }
 
     public Calendar updateCalendar(Calendar calendar, long calendarId, long departmentId) {
@@ -53,16 +68,29 @@ public class CalendarService {
             throw new BusinessLogicException(ExceptionCode.CALENDAR_UNAUTHORIZED_ACTION);
         }
 
+        boolean isChangeTime = false;
+
         Optional.ofNullable(calendar.getTitle())
                 .ifPresent(title -> findCalendar.setTitle(title));
         Optional.ofNullable(calendar.getContent())
                 .ifPresent(content -> findCalendar.setContent(content));
-        Optional.ofNullable(calendar.getStartTime())
-                .ifPresent(startTime -> findCalendar.setStartTime(startTime));
+
+        if (calendar.getStartTime()!= null && !calendar.getStartTime().equals(findCalendar.getStartTime())) {
+            findCalendar.setStartTime(calendar.getStartTime());
+            isChangeTime = true;
+        }
+
         Optional.ofNullable(calendar.getEndTime())
                 .ifPresent(endTime -> findCalendar.setEndTime(endTime));
 
-        return calendarRepository.save(findCalendar);
+        Calendar savedCalendar = calendarRepository.save(findCalendar);
+
+        //일정이 변경되었을 경우 알림 전송
+        if(isChangeTime) {
+            sendCalendarAlarm(savedCalendar, "변경되었습니다.");
+        }
+
+        return savedCalendar;
     }
 
     public Calendar findCalendar(long calendarId) {
@@ -88,5 +116,25 @@ public class CalendarService {
         Optional<Calendar> optionalCalendar = calendarRepository.findById(calendarId);
         return optionalCalendar.orElseThrow(() ->
                 new BusinessLogicException(ExceptionCode.CALENDAR_NOT_FOUND));
+    }
+
+
+    //일정 알림
+    private void sendCalendarAlarm(Calendar calendar, String status) {
+        String startTime = changeFormatTime(calendar.getStartTime());
+
+        List<Long> employeeIds = employeeFeignClient.getEmployeeIdsByDepartment(calendar.getDepartmentId());
+        employeeIds.stream().forEach( id-> {
+            utilProducer.sendCalendarNotification( id,
+                    String.format("[%s]에 일정[%s]이 %s", startTime, calendar.getTitle(), status),
+                    calendar.getCalendarId());
+        });
+    }
+
+    //날짜형식 변경
+    private String changeFormatTime(LocalDateTime localDateTime) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        return localDateTime.format(formatter);
     }
 }
