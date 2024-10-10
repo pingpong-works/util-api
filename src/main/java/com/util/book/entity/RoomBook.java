@@ -76,8 +76,8 @@ public class RoomBook {
     }
 
     public enum StatusType {
-        PENDING("검토"),
-        CONFIRMED("확인"),
+        PENDING("신청"),
+        CONFIRMED("확정"),
         CANCELLED("취소");
 
         @Getter

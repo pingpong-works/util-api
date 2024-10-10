@@ -1,6 +1,8 @@
 package com.util.book.service;
 
 
+import com.alarm.kafka.UtilProducer;
+import com.util.book.entity.CarBook;
 import com.util.book.entity.RoomBook;
 import com.util.book.repository.RoomBookRepository;
 import com.util.exception.BusinessLogicException;
@@ -19,11 +21,13 @@ import java.util.Optional;
 public class RoomBookService {
     private final RoomBookRepository roomBookRepository;
     private final EmployeeFeignClient employeeFeignClient;
+    private final UtilProducer utilProducer;
 
     public RoomBookService(RoomBookRepository roomBookRepository,
-                          EmployeeFeignClient employeeFeignClient) {
+                           EmployeeFeignClient employeeFeignClient, UtilProducer utilProducer) {
         this.roomBookRepository = roomBookRepository;
         this.employeeFeignClient = employeeFeignClient;
+        this.utilProducer = utilProducer;
     }
 
     public RoomBook createRoomBook(RoomBook roomBook, long employeeId) throws IllegalArgumentException {
@@ -57,7 +61,10 @@ public class RoomBookService {
             throw new BusinessLogicException(ExceptionCode.BOOK_CONFLICT_BOOKING);
         }
 
-        return roomBookRepository.save(roomBook);
+        RoomBook savedRoomBook = roomBookRepository.save(roomBook);
+        sendRoomBookAlarm(savedRoomBook, savedRoomBook.getStatus().getStatus().toString());
+
+        return savedRoomBook;
     }
 
     public RoomBook updateRoomBook(RoomBook roomBook, long roomBookId, long employeeId) {
@@ -96,7 +103,17 @@ public class RoomBookService {
         Optional.ofNullable(roomBook.getStatus())
                 .ifPresent(status -> findRoomBook.setStatus(status));
 
-        return roomBookRepository.save(findRoomBook);
+        RoomBook savedRoomBook = roomBookRepository.save(findRoomBook);
+
+        //예약 상태 변경 시 알림 발송
+        if(savedRoomBook.getStatus().equals(RoomBook.StatusType.CANCELLED)
+                || savedRoomBook.getStatus().equals(RoomBook.StatusType.CONFIRMED)) {
+
+            sendRoomBookAlarm(savedRoomBook, savedRoomBook.getStatus().getStatus().toString());
+        }
+
+
+        return savedRoomBook;
     }
 
     public RoomBook findRoomBook(long roomBookId) {
@@ -123,5 +140,12 @@ public class RoomBookService {
         Optional<RoomBook> optionalroomBook = roomBookRepository.findById(roomBookId);
         return optionalroomBook.orElseThrow(() ->
                 new BusinessLogicException(ExceptionCode.ROOM_BOOK_NOT_FOUND));
+    }
+
+    private void sendRoomBookAlarm(RoomBook roomBook, String status) {
+
+        utilProducer.sendBookRoomNotification(roomBook.getEmployeeId(),
+                String.format("회의실[%s]의 예약[%s]이 완료되었습니다.", roomBook.getRoom().getName(), status),
+                roomBook.getRoomBookId());
     }
 }
