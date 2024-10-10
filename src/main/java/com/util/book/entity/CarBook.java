@@ -77,7 +77,7 @@ public class CarBook {
 
     public enum StatusType {
         PENDING("검토"),
-        CONFIRMED("확인"),
+        CONFIRMED("확정"),
         CANCELLED("취소");
 
         @Getter
