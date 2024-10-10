@@ -1,5 +1,6 @@
 package com.util.board.service;
 
+import com.alarm.kafka.UtilProducer;
 import com.util.board.entity.Board;
 import com.util.board.repository.BoardRepository;
 import com.util.exception.BusinessLogicException;
@@ -19,11 +20,13 @@ import java.util.Optional;
 public class BoardService {
     private final BoardRepository boardRepository;
     private final EmployeeFeignClient employeeFeignClient;
+    private final UtilProducer utilProducer;
 
     public BoardService(BoardRepository boardRepository,
-                        EmployeeFeignClient employeeFeignClient) {
+                        EmployeeFeignClient employeeFeignClient, UtilProducer utilProducer) {
         this.boardRepository = boardRepository;
         this.employeeFeignClient = employeeFeignClient;
+        this.utilProducer = utilProducer;
     }
 
     public Board createBoard(Board board, long employeeId) throws IllegalArgumentException {
@@ -45,7 +48,15 @@ public class BoardService {
 
         // employee없이 사용하는 일반 코드, 현재 board에는 username이 null로 저장됨
         board.setEmployeeId(employeeId);
-        return boardRepository.save(board);
+        Board savedBoard = boardRepository.save(board);
+
+
+        //공지사항이 등록되었을 때 알림 발송 기능 (category = notice) > 전체 직원에게 발송...
+        if(savedBoard.getCategory().equalsIgnoreCase("Notice")) {
+            sendNoticeEmployees(savedBoard);
+        }
+
+        return savedBoard;
     }
 
     public Board updateBoard(Board board, long boardId, long employeeId, List<String> imagesToDelete) throws IllegalArgumentException {
@@ -67,7 +78,10 @@ public class BoardService {
         Optional.ofNullable(imagesToDelete)
                 .ifPresent(toDelete -> toDelete.forEach(url -> findBoard.getImageUrls().remove(url)));
 
-        return boardRepository.save(findBoard);
+        Board saveBoard =  boardRepository.save(findBoard);
+
+
+        return saveBoard;
     }
 
     public Board findBoard(long boardId) {
@@ -110,5 +124,19 @@ public class BoardService {
         Optional<Board> optionalBoard = boardRepository.findById(boardId);
         return optionalBoard.orElseThrow(() ->
                 new BusinessLogicException(ExceptionCode.BOARD_NOT_FOUND));
+    }
+
+    private void sendNoticeEmployees (Board savedBoard) {
+
+        List<Long> ids = employeeFeignClient.getEmployeeIds();
+
+        ids.forEach(id -> {
+            utilProducer.sendNoticeNotification(
+                    id,
+                    String.format("공지사항[%s]이 등록되었습니다.",savedBoard.getTitle()),
+                    savedBoard.getBoardId()
+            );
+        });
+
     }
 }

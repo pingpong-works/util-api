@@ -47,6 +47,11 @@ dependencies {
 
 	// OpenFeign
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+
+	// Kafka
+	implementation 'org.apache.kafka:kafka-streams'
+	implementation 'org.springframework.kafka:spring-kafka'
+	testImplementation 'org.springframework.kafka:spring-kafka-test'
 }
 
 dependencyManagement {

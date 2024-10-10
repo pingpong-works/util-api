@@ -1,7 +1,5 @@
 package com.util.calendar.controller;
 
-import com.util.book.entity.CarBook;
-import com.util.book.entity.RoomBook;
 import com.util.book.service.CarBookService;
 import com.util.book.service.RoomBookService;
 import com.util.calendar.dto.CalendarDto;
@@ -19,42 +17,28 @@ import javax.validation.constraints.Positive;
 import java.net.URI;
 import java.util.List;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
-@RequestMapping("/books/{book-id}/calendars")
+@RequestMapping("/calendars")
 public class CalendarController {
-    private final static String CALENDAR_DEFAULT_URL = "/books/{book-id}/calendars";
+    private final static String CALENDAR_DEFAULT_URL = "/calendars";
     private final CalendarService calendarService;
-    private final CarBookService carBookService;
-    private final RoomBookService roomBookService;
     private final CalendarMapper mapper;
 
     public CalendarController(CalendarService calendarService,
-                              CarBookService carBookService,
-                              RoomBookService roomBookService,
                               CalendarMapper mapper) {
         this.calendarService = calendarService;
-        this.carBookService = carBookService;
-        this.roomBookService = roomBookService;
         this.mapper = mapper;
     }
 
     @PostMapping
-    public ResponseEntity postCalendar(@PathVariable("book-id") @Positive long bookId,
-                                       @Valid @RequestBody CalendarDto.Post requestBody,
+    public ResponseEntity postCalendar(@Valid @RequestBody CalendarDto.Post requestBody,
                                        @RequestParam("departmentId") @Positive long departmentId) {
         Calendar calendar = mapper.calendarPostDtoToCalendar(requestBody);
 
-        if (calendar.getBook() == Calendar.bookType.Car) {
-            CarBook carBook = carBookService.findVerifiedCarBook(bookId);
-            calendar.setCarBook(carBook);
-        } else if (calendar.getBook() == Calendar.bookType.Room) {
-            RoomBook roomBook = roomBookService.findVerifiedroomBook(bookId);
-            calendar.setRoomBook(roomBook);
-        }
-
         Calendar createCalendar = calendarService.createCalendar(calendar, departmentId);
 
-        URI location = UriCreator.createUri(CALENDAR_DEFAULT_URL.replace("{book-id}", String.valueOf(bookId)), createCalendar.getCalendarId());
+        URI location = UriCreator.createUri(CALENDAR_DEFAULT_URL, createCalendar.getCalendarId());
         return ResponseEntity.created(location).build();
     }
 

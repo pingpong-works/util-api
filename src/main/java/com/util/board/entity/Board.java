@@ -33,7 +33,7 @@ public class Board extends Auditable {
     @Column(name = "board_category")
     private String category;
 
-    @Column(name = "board_image_url")
+    @Column(name = "board_image_urls")
     @ElementCollection
     private List<String> imageUrls = new ArrayList<>();
 

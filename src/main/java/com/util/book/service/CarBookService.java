@@ -1,5 +1,6 @@
 package com.util.book.service;
 
+import com.alarm.kafka.UtilProducer;
 import com.util.book.entity.CarBook;
 import com.util.book.repository.CarBookRepository;
 import com.util.exception.BusinessLogicException;
@@ -18,11 +19,13 @@ import java.util.Optional;
 public class CarBookService {
     private final CarBookRepository carBookRepository;
     private final EmployeeFeignClient employeeFeignClient;
+    private final UtilProducer utilProducer;
 
     public CarBookService(CarBookRepository carBookRepository,
-                          EmployeeFeignClient employeeFeignClient) {
+                          EmployeeFeignClient employeeFeignClient, UtilProducer utilProducer) {
         this.carBookRepository = carBookRepository;
         this.employeeFeignClient = employeeFeignClient;
+        this.utilProducer = utilProducer;
     }
 
     public CarBook createCarBook(CarBook carBook, long employeeId) throws IllegalArgumentException {
@@ -56,7 +59,10 @@ public class CarBookService {
             throw new BusinessLogicException(ExceptionCode.BOOK_CONFLICT_BOOKING);
         }
 
-        return carBookRepository.save(carBook);
+        CarBook savedCarBook =  carBookRepository.save(carBook);
+        sendCarBookAlarm(savedCarBook, "신청");
+
+        return savedCarBook;
     }
 
     public CarBook updateCarBook(CarBook carBook, long carBookId, long employeeId) {
@@ -94,7 +100,17 @@ public class CarBookService {
         Optional.ofNullable(carBook.getStatus())
                 .ifPresent(status -> findCarBook.setStatus(status));
 
-        return carBookRepository.save(findCarBook);
+        CarBook savedCarBook =  carBookRepository.save(findCarBook);
+
+
+        //예약 상태 변경 시 알림 발송
+        if(savedCarBook.getStatus().equals(CarBook.StatusType.CANCELLED)
+                || savedCarBook.getStatus().equals(CarBook.StatusType.CONFIRMED)) {
+
+            sendCarBookAlarm(savedCarBook, savedCarBook.getStatus().getStatus().toString());
+        }
+
+        return  savedCarBook;
     }
 
     public CarBook findCarBook(long carBookId) {
@@ -121,5 +137,12 @@ public class CarBookService {
         Optional<CarBook> optionalCarBook = carBookRepository.findById(carBookId);
         return optionalCarBook.orElseThrow(() ->
                 new BusinessLogicException(ExceptionCode.CAR_BOOK_NOT_FOUND));
+    }
+
+    private void sendCarBookAlarm(CarBook carBook, String status) {
+
+        utilProducer.sendBookCarNotification(carBook.getEmployeeId(),
+                String.format("차량[%s]의 예약[%s]이 완료되었습니다.", carBook.getCar().getNumber(), status),
+                carBook.getCarBookId());
     }
 }
