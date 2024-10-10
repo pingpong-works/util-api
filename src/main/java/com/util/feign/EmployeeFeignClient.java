@@ -13,5 +13,9 @@ public interface EmployeeFeignClient {
     Map<String, Object> getEmployeeById(@PathVariable("id") Long employeeId);
 
     @GetMapping("/employees")
-    List<Long> getEmployeeIds();
+    List<Long> getEmployeeIds(); // 전체직원
+
+    @GetMapping("departments/{department-id}/employees")
+    List<Long> getEmployeeIdsByDepartment(@PathVariable("department-id") Long departmentId);
+
 }
