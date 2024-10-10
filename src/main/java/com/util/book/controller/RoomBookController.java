@@ -4,6 +4,8 @@ import com.util.book.dto.RoomBookDto;
 import com.util.book.entity.RoomBook;
 import com.util.book.mapper.RoomBookMapper;
 import com.util.book.service.RoomBookService;
+import com.util.calendar.entity.Calendar;
+import com.util.calendar.service.CalendarService;
 import com.util.dto.SingleResponseDto;
 import com.util.resource.entity.Room;
 import com.util.resource.service.RoomService;
@@ -22,23 +24,28 @@ import java.util.List;
 public class RoomBookController {
     private final static String ROOM_BOOK_DEFAULT_URL = "/rooms/{room-id}/books";
     private final RoomBookService roomBookService;
+    private final CalendarService calendarService;
     private final RoomService roomService;
     private final RoomBookMapper mapper;
 
-    public RoomBookController(RoomBookService roomBookService,
-                             RoomService roomService,
-                             RoomBookMapper mapper) {
+    public RoomBookController(RoomBookService roomBookService, CalendarService calendarService,
+                              RoomService roomService,
+                              RoomBookMapper mapper) {
         this.roomBookService = roomBookService;
+        this.calendarService = calendarService;
         this.roomService = roomService;
         this.mapper = mapper;
     }
 
     @PostMapping
     public ResponseEntity postRoomBook(@PathVariable("room-id") @Positive long roomId,
-                                      @Valid @RequestBody RoomBookDto.Post requestBody,
-                                      @RequestParam("employeeId") @Positive long employeeId) {
+                                       @Valid @RequestBody RoomBookDto.Post requestBody,
+                                       @RequestParam("calendarId") @Positive long calendarId,
+                                       @RequestParam("employeeId") @Positive long employeeId) {
         RoomBook roomBook = mapper.roomBookPostDtoToRoomBook(requestBody);
 
+        Calendar calendar = calendarService.findVerifiedCalendar(calendarId);
+        roomBook.setCalendar(calendar);
         Room room = roomService.findVerifiedRoom(roomId);
         roomBook.setRoom(room);
 

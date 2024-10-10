@@ -3,6 +3,7 @@ package com.util.book.mapper;
 import com.util.book.dto.CarBookDto;
 import com.util.book.entity.CarBook;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 import java.util.List;
 
@@ -13,6 +14,8 @@ public interface CarBookMapper {
 
     CarBook carBookPatchDtoToCarBook(CarBookDto.Patch requestBody);
 
+    @Mapping(source = "calendar.calendarId", target = "calendarId")
+    @Mapping(source = "car.carId", target = "carId")
     CarBookDto.Response carBookToCarBookResponseDto(CarBook carBook);
 
     List<CarBookDto.Response> carBooksToCarBookResponseDtos(List<CarBook> carBooks);

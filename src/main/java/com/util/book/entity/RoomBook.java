@@ -8,8 +8,6 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Setter
@@ -34,7 +32,6 @@ public class RoomBook {
     @Column(name = "room_book_status")
     private StatusType status = StatusType.PENDING;
 
-
     @Column(name = "employee_id")
     private Long employeeId;
 
@@ -52,12 +49,13 @@ public class RoomBook {
         }
     }
 
-    @OneToMany(mappedBy = "roomBook", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private List<Calendar> calendars = new ArrayList<>();
+    @ManyToOne
+    @JoinColumn(name = "calendar_id")
+    private Calendar calendar;
 
     public void setCalendar(Calendar calendar) {
-        calendars.add(calendar);
-        if (calendar.getRoomBook() != this) {
+        this.calendar = calendar;
+        if (!calendar.getRoomBooks().contains(this)) {
             calendar.setRoomBook(this);
         }
     }
@@ -70,6 +68,7 @@ public class RoomBook {
 
         @Getter
         private final String purpose;
+
         PurposeType(String purpose) {
             this.purpose = purpose;
         }
@@ -82,6 +81,7 @@ public class RoomBook {
 
         @Getter
         private final String status;
+
         StatusType(String status) {
             this.status = status;
         }

@@ -3,6 +3,7 @@ package com.util.book.mapper;
 import com.util.book.dto.RoomBookDto;
 import com.util.book.entity.RoomBook;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 
 import java.util.List;
 
@@ -13,6 +14,8 @@ public interface RoomBookMapper {
 
     RoomBook roomBookPatchDtoToRoomBook(RoomBookDto.Patch requestBody);
 
+    @Mapping(source = "calendar.calendarId", target = "calendarId")
+    @Mapping(source = "room.roomId", target = "roomId")
     RoomBookDto.Response roomBookToRoomBookResponseDto(RoomBook roomBook);
 
     List<RoomBookDto.Response> roomBooksToRoomBookResponseDtos(List<RoomBook> roomBooks);
