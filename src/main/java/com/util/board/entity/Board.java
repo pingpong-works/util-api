@@ -16,7 +16,7 @@ import java.util.List;
 public class Board extends Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long boardId;
+    private Long boardId;
 
     @Column(name = "board_title")
     private String title;

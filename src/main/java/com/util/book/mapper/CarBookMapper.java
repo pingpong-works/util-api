@@ -14,7 +14,6 @@ public interface CarBookMapper {
 
     CarBook carBookPatchDtoToCarBook(CarBookDto.Patch requestBody);
 
-    @Mapping(source = "calendar.calendarId", target = "calendarId")
     @Mapping(source = "car.carId", target = "carId")
     CarBookDto.Response carBookToCarBookResponseDto(CarBook carBook);
 

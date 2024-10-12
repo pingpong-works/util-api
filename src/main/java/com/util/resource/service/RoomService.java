@@ -1,8 +1,10 @@
 package com.util.resource.service;
 
+import com.util.dto.SingleResponseDto;
 import com.util.exception.BusinessLogicException;
 import com.util.exception.ExceptionCode;
-import com.util.feign.EmployeeFeignClient;
+import com.util.feign.AuthFeignClient;
+import com.util.feign.dto.EmployeeDto;
 import com.util.resource.entity.Room;
 import com.util.resource.repository.RoomRepository;
 import org.springframework.stereotype.Service;
@@ -15,41 +17,39 @@ import java.util.Optional;
 @Service
 public class RoomService {
     private final RoomRepository roomRepository;
-    private final EmployeeFeignClient employeeFeignClient;
+    private final AuthFeignClient authFeignClient;
 
     public RoomService(RoomRepository roomRepository,
-                       EmployeeFeignClient employeeFeignClient) {
+                       AuthFeignClient authFeignClient) {
         this.roomRepository = roomRepository;
-        this.employeeFeignClient = employeeFeignClient;
+        this.authFeignClient = authFeignClient;
     }
 
     public Room createRoom(Room room, long employeeId) throws IllegalArgumentException {
-        // employee 호출할 경우 사용하는 코드
-//        Map<String, Object> employee = employeeFeignClient.getEmployeeById(employeeId);
-//
-//        if (!employee.containsKey("employeeId")) {
-//            throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
-//        }
-//
-//        if (!employee.get("username").equals("관리자")) {
-//            throw new BusinessLogicException(ExceptionCode.ROOM_UNAUTHORIZED_ACTION);
-//        }
+        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(employeeId);
+
+        if (employeeDto.getData().getEmployeeId() == null) {
+            throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
+        }
+
+        if (!employeeDto.getData().getName().equals("관리자")) {
+            throw new BusinessLogicException(ExceptionCode.CAR_UNAUTHORIZED_ACTION);
+        }
         return roomRepository.save(room);
     }
 
     public Room updateRoom(Room room, long roomId, long employeeId, List<String> equipmentsToDelete) {
         Room findRoom = findVerifiedRoom(roomId);
 
-        // employee 호출할 경우 사용하는 코드
-//        Map<String, Object> employee = employeeFeignClient.getEmployeeById(employeeId);
-//
-//        if (!employee.containsKey("employeeId")) {
-//            throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
-//        }
-//
-//        if (!employee.get("username").equals("관리자")) {
-//            throw new BusinessLogicException(ExceptionCode.ROOM_UNAUTHORIZED_ACTION);
-//        }
+        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(employeeId);
+
+        if (employeeDto.getData().getEmployeeId() == null) {
+            throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
+        }
+
+        if (!employeeDto.getData().getName().equals("관리자")) {
+            throw new BusinessLogicException(ExceptionCode.CAR_UNAUTHORIZED_ACTION);
+        }
 
         Optional.ofNullable(room.getName())
                 .ifPresent(name -> findRoom.setName(name));
@@ -84,16 +84,15 @@ public class RoomService {
     }
 
     public void deleteRoom(long roomId, long employeeId) {
-        // employee 호출할 경우 사용하는 코드
-//        Map<String, Object> employee = employeeFeignClient.getEmployeeById(employeeId);
-//
-//        if (!employee.containsKey("employeeId")) {
-//            throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
-//        }
-//
-//        if (!employee.get("username").equals("관리자")) {
-//            throw new BusinessLogicException(ExceptionCode.ROOM_UNAUTHORIZED_ACTION);
-//        }
+        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(employeeId);
+
+        if (employeeDto.getData().getEmployeeId() == null) {
+            throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
+        }
+
+        if (!employeeDto.getData().getName().equals("관리자")) {
+            throw new BusinessLogicException(ExceptionCode.CAR_UNAUTHORIZED_ACTION);
+        }
         Room findRoom = findVerifiedRoom(roomId);
 
         roomRepository.delete(findRoom);

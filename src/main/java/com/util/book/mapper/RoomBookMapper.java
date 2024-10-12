@@ -14,7 +14,6 @@ public interface RoomBookMapper {
 
     RoomBook roomBookPatchDtoToRoomBook(RoomBookDto.Patch requestBody);
 
-    @Mapping(source = "calendar.calendarId", target = "calendarId")
     @Mapping(source = "room.roomId", target = "roomId")
     RoomBookDto.Response roomBookToRoomBookResponseDto(RoomBook roomBook);
 

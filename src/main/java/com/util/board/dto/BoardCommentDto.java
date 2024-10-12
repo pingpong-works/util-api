@@ -33,9 +33,9 @@ public class BoardCommentDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class Response {
-        private long boardCommentId;
-        private long boardId;
-        private long employeeId;
+        private Long boardCommentId;
+        private Long boardId;
+        private Long employeeId;
         private LocalDateTime createdAt;
         private LocalDateTime modifiedAt;
         private Long parentCommentId;

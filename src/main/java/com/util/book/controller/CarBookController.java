@@ -7,6 +7,8 @@ import com.util.book.service.CarBookService;
 import com.util.calendar.entity.Calendar;
 import com.util.calendar.service.CalendarService;
 import com.util.dto.SingleResponseDto;
+import com.util.feign.AuthFeignClient;
+import com.util.feign.dto.EmployeeDto;
 import com.util.resource.entity.Car;
 import com.util.resource.service.CarService;
 import com.util.utils.UriCreator;
@@ -21,69 +23,85 @@ import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
-@RequestMapping("/cars/{car-id}/books")
+@RequestMapping
 public class CarBookController {
     private final static String CAR_BOOK_DEFAULT_URL = "/cars/{car-id}/books";
     private final CarBookService carBookService;
-    private final CalendarService calendarService;
     private final CarService carService;
     private final CarBookMapper mapper;
+    private final CalendarService calendarService;
+    private final AuthFeignClient authFeignClient;
 
-    public CarBookController(CarBookService carBookService, CalendarService calendarService,
+    public CarBookController(CarBookService carBookService,
                              CarService carService,
-                             CarBookMapper mapper) {
+                             CarBookMapper mapper,
+                             CalendarService calendarService,
+                             AuthFeignClient authFeignClient) {
         this.carBookService = carBookService;
-        this.calendarService = calendarService;
         this.carService = carService;
         this.mapper = mapper;
+        this.calendarService = calendarService;
+        this.authFeignClient = authFeignClient;
     }
 
-    @PostMapping
+    @PostMapping("/cars/{car-id}/books")
     public ResponseEntity postCarBook(@PathVariable("car-id") @Positive long carId,
                                       @Valid @RequestBody CarBookDto.Post requestBody,
-                                      @RequestParam("calendarId") @Positive long calendarId,
-                                      @RequestParam("employeeId") @Positive long employeeId) {
+                                      @RequestParam("employeeId") @Positive long employeeId,
+                                      @RequestParam(value = "title", required = true) String title,
+                                      @RequestParam(value = "content", required = true) String content) {
         CarBook carBook = mapper.carBookPostDtoToCarBook(requestBody);
 
-        Calendar calendar = calendarService.findCalendar(calendarId);
-        carBook.setCalendar(calendar);
         Car car = carService.findVerifiedCar(carId);
         carBook.setCar(car);
 
         CarBook createCarBook = carBookService.createCarBook(carBook, employeeId);
 
+        Calendar calendar = new Calendar();
+        calendar.setTitle(title);
+        calendar.setContent(content);
+        calendar.setStartTime(requestBody.getBookStart());
+        calendar.setEndTime(requestBody.getBookEnd());
+        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(employeeId);
+        calendar.setDepartmentId(employeeDto.getData().getDepartmentId());
+
+        calendar.setCarBook(createCarBook);
+        createCarBook.setCalendar(calendar);
+
+        calendarService.createCalendar(calendar, employeeId);
+
         URI location = UriCreator.createUri(CAR_BOOK_DEFAULT_URL.replace("{car-id}", String.valueOf(carId)), createCarBook.getCarBookId());
         return ResponseEntity.created(location).build();
     }
 
-    @PatchMapping("/{book-id}")
+    @PatchMapping("/car-books/{book-id}")
     public ResponseEntity patchCarBook(@PathVariable("book-id") @Positive long carBookId,
                                        @Valid @RequestBody CarBookDto.Patch requestBody,
-                                       @RequestParam("employeeId") @Positive long employeeId) {
+                                       @RequestParam("departmentId") @Positive long departmentId) {
         CarBook updateCarBook = mapper.carBookPatchDtoToCarBook(requestBody);
-        CarBook carBook = carBookService.updateCarBook(updateCarBook, carBookId, employeeId);
+        CarBook carBook = carBookService.updateCarBook(updateCarBook, carBookId, departmentId);
         return new ResponseEntity<>(
                 new SingleResponseDto<>(mapper.carBookToCarBookResponseDto(carBook)), HttpStatus.OK);
     }
 
-    @GetMapping("/{book-id}")
+    @GetMapping("/car-books/{book-id}")
     public ResponseEntity getCarBook(@PathVariable("book-id") @Positive long carBookId) {
         CarBook carBook = carBookService.findCarBook(carBookId);
         return new ResponseEntity<>(
                 new SingleResponseDto<>(mapper.carBookToCarBookResponseDto(carBook)), HttpStatus.OK);
     }
 
-    @GetMapping
-    public ResponseEntity<List<CarBookDto.Response>> getCarBooks(@PathVariable("car-id") @Positive long carId) {
+    @GetMapping("/car-books")
+    public ResponseEntity<List<CarBookDto.Response>> getCarBooks(@RequestParam("carId") @Positive long carId) {
         List<CarBook> carBooks = carBookService.findAllByCarId(carId);
         List<CarBookDto.Response> response = mapper.carBooksToCarBookResponseDtos(carBooks);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{book-id}")
+    @DeleteMapping("/car-books/{book-id}")
     public ResponseEntity deleteCarBook(@PathVariable("book-id") @Positive long carBookId,
-                                        @RequestParam("employeeId") @Positive long employeeId) {
-        carBookService.deleteCarBook(carBookId, employeeId);
+                                        @RequestParam("departmentId") @Positive long departmentId) {
+        carBookService.deleteCarBook(carBookId, departmentId);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

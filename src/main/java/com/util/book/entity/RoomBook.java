@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 public class RoomBook {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long roomBookId;
+    private Long roomBookId;
 
     @Column(name = "room_book_start")
     private LocalDateTime bookStart;
@@ -49,16 +49,8 @@ public class RoomBook {
         }
     }
 
-    @ManyToOne
-    @JoinColumn(name = "calendar_id")
+    @OneToOne(mappedBy = "roomBook", cascade = CascadeType.ALL)
     private Calendar calendar;
-
-    public void setCalendar(Calendar calendar) {
-        this.calendar = calendar;
-        if (!calendar.getRoomBooks().contains(this)) {
-            calendar.setRoomBook(this);
-        }
-    }
 
     public enum PurposeType {
         MEETING("회의"),

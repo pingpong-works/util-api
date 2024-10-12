@@ -16,7 +16,7 @@ import java.util.List;
 public class BoardComment extends Auditable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long boardCommentId;
+    private Long boardCommentId;
 
     @Column(name = "board_comment_content")
     private String content;

@@ -1,74 +1,68 @@
 package com.util.book.service;
 
-
 import com.alarm.kafka.UtilProducer;
-import com.util.book.entity.CarBook;
 import com.util.book.entity.RoomBook;
 import com.util.book.repository.RoomBookRepository;
+import com.util.dto.SingleResponseDto;
 import com.util.exception.BusinessLogicException;
 import com.util.exception.ExceptionCode;
-import com.util.feign.EmployeeFeignClient;
+import com.util.feign.AuthFeignClient;
+import com.util.feign.dto.EmployeeDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Transactional
 @Service
 public class RoomBookService {
     private final RoomBookRepository roomBookRepository;
-    private final EmployeeFeignClient employeeFeignClient;
+    private final AuthFeignClient authFeignClient;
     private final UtilProducer utilProducer;
 
     public RoomBookService(RoomBookRepository roomBookRepository,
-                           EmployeeFeignClient employeeFeignClient, UtilProducer utilProducer) {
+                           AuthFeignClient authFeignClient, UtilProducer utilProducer) {
         this.roomBookRepository = roomBookRepository;
-        this.employeeFeignClient = employeeFeignClient;
+        this.authFeignClient = authFeignClient;
         this.utilProducer = utilProducer;
     }
 
     public RoomBook createRoomBook(RoomBook roomBook, long employeeId) throws IllegalArgumentException {
-        // employee 호출할 경우 사용하는 코드
-//        Map<String, Object> employee = employeeFeignClient.getEmployeeById(employeeId);
-//
-//        if (employee.containsKey("employeeId")) {
-//            Long fetchEmployeeId = (Long) employee.get("employeeId");
-//            String employeeName = (String) employee.get("username");
-//
-//            roomBook.setEmployeeId(fetchEmployeeId);
-//            roomBook.setEmployeeName(employeeName);
-//
-//        boolean isBooking = roomBookRepository.existsOverlappingBooking(
-//                roomBook.getRoom().getRoomId(), roomBook.getBookStart(), roomBook.getBookEnd());
-//        if (isBooking) {
-//            throw new BusinessLogicException(ExceptionCode.BOOK_CONFLICT_BOOKING);
-//        }
-//
-//            return roomBookRepository.save(roomBook);
-//        }
-//        else {
-//            throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
-//        }
+        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(employeeId);
 
-        // employee없이 사용하는 일반 코드, 현재 roomBook에는 username이 null로 저장됨
-        roomBook.setEmployeeId(employeeId);
-        boolean isOverlapping = roomBookRepository.existsOverlappingBooking(
-                roomBook.getRoom().getRoomId(), roomBook.getBookStart(), roomBook.getBookEnd());
-        if (isOverlapping) {
-            throw new BusinessLogicException(ExceptionCode.BOOK_CONFLICT_BOOKING);
+        if (employeeDto != null && employeeDto.getData().getEmployeeId() != null) {
+            Long fetchEmployeeId = employeeDto.getData().getEmployeeId();
+            String employeeName = employeeDto.getData().getName();
+
+            roomBook.setEmployeeId(fetchEmployeeId);
+            roomBook.setEmployeeName(employeeName);
+
+            boolean isBooking = roomBookRepository.existsOverlappingBooking(
+                    roomBook.getRoom().getRoomId(), roomBook.getBookStart(), roomBook.getBookEnd());
+            if (isBooking) {
+                throw new BusinessLogicException(ExceptionCode.BOOK_CONFLICT_BOOKING);
+            }
+
+            RoomBook savedRoomBook = roomBookRepository.save(roomBook);
+            sendRoomBookAlarm(savedRoomBook, savedRoomBook.getStatus().getStatus());
+
+            return savedRoomBook;
         }
-
-        RoomBook savedRoomBook = roomBookRepository.save(roomBook);
-        sendRoomBookAlarm(savedRoomBook, savedRoomBook.getStatus().getStatus().toString());
-
-        return savedRoomBook;
+        else {
+            throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
+        }
     }
 
-    public RoomBook updateRoomBook(RoomBook roomBook, long roomBookId, long employeeId) {
+    public RoomBook updateRoomBook(RoomBook roomBook, long roomBookId, long departmentId) {
         RoomBook findRoomBook = findVerifiedroomBook(roomBookId);
+
+        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(findRoomBook.getEmployeeId());
+
+        if (employeeDto.getData().getDepartmentId() != departmentId) {
+            throw new BusinessLogicException(ExceptionCode.CAR_BOOK_UNAUTHORIZED_ACTION);
+        }
 
         LocalDateTime originalBookStart = findRoomBook.getBookStart();
         LocalDateTime originalBookEnd = findRoomBook.getBookEnd();
@@ -96,8 +90,12 @@ public class RoomBookService {
 
         Optional.ofNullable(roomBook.getBookStart())
                 .ifPresent(bookStart -> findRoomBook.setBookStart(bookStart));
+        Optional.ofNullable(roomBook.getBookStart())
+                .ifPresent(bookStart -> findRoomBook.getCalendar().setStartTime(bookStart));
         Optional.ofNullable(roomBook.getBookEnd())
                 .ifPresent(bookEnd -> findRoomBook.setBookEnd(bookEnd));
+        Optional.ofNullable(roomBook.getBookEnd())
+                .ifPresent(bookEnd -> findRoomBook.getCalendar().setEndTime(bookEnd));
         Optional.ofNullable(roomBook.getPurpose())
                 .ifPresent(purpose -> findRoomBook.setPurpose(purpose));
         Optional.ofNullable(roomBook.getStatus())
@@ -109,7 +107,7 @@ public class RoomBookService {
         if(savedRoomBook.getStatus().equals(RoomBook.StatusType.CANCELLED)
                 || savedRoomBook.getStatus().equals(RoomBook.StatusType.CONFIRMED)) {
 
-            sendRoomBookAlarm(savedRoomBook, savedRoomBook.getStatus().getStatus().toString());
+            sendRoomBookAlarm(savedRoomBook, savedRoomBook.getStatus().getStatus());
         }
 
 
@@ -126,10 +124,12 @@ public class RoomBookService {
         return roomBookRepository.findAllByRoom_roomId(roomId);
     }
 
-    public void deleteRoomBook(long roomBookId, long employeeId) {
+    public void deleteRoomBook(long roomBookId, long departmentId) {
         RoomBook findroomBook = findVerifiedroomBook(roomBookId);
 
-        if (findroomBook.getEmployeeId() == employeeId) {
+        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(findroomBook.getEmployeeId());
+
+        if (employeeDto.getData().getDepartmentId() == departmentId) {
             roomBookRepository.delete(findroomBook);
         }else {
             throw new BusinessLogicException(ExceptionCode.ROOM_BOOK_UNAUTHORIZED_ACTION);
@@ -145,7 +145,7 @@ public class RoomBookService {
     private void sendRoomBookAlarm(RoomBook roomBook, String status) {
 
         utilProducer.sendBookRoomNotification(roomBook.getEmployeeId(),
-                String.format("회의실[%s]의 예약[%s]이 완료되었습니다.", roomBook.getRoom().getName(), status),
+                String.format("회의실[%s]의 예약이 [%s]되었습니다.", roomBook.getRoom().getName(), status),
                 roomBook.getRoomBookId());
     }
 }

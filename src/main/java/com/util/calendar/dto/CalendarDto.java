@@ -45,14 +45,14 @@ public class CalendarDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class Response {
-        private long calendarId;
+        private Long calendarId;
         private String title;
         private String content;
         private LocalDateTime startTime;
         private LocalDateTime endTime;
-        private long departmentId;
+        private Long departmentId;
         private String name;
-        private long carBookId;
-        private long roomBookId;
+        private Long carBookId;
+        private Long roomBookId;
     }
 }

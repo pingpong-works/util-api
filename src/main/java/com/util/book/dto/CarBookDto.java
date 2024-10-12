@@ -45,14 +45,13 @@ public class CarBookDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class Response {
-        private long carBookId;
+        private Long carBookId;
         private LocalDateTime bookStart;
         private LocalDateTime bookEnd;
         private CarBook.PurposeType purpose;
         private CarBook.StatusType status;
-        private long employeeId;
+        private Long employeeId;
         private String employeeName;
-        private long carId;
-        private long calendarId;
+        private Long carId;
     }
 }

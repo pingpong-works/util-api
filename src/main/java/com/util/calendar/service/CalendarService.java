@@ -2,48 +2,44 @@ package com.util.calendar.service;
 
 import com.util.calendar.entity.Calendar;
 import com.util.calendar.repository.CalendarRepository;
+import com.util.dto.SingleResponseDto;
 import com.util.exception.BusinessLogicException;
 import com.util.exception.ExceptionCode;
-import com.util.feign.DepartmentFeignClient;
+import com.util.feign.AuthFeignClient;
+import com.util.feign.dto.DepartmentDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Transactional
 @Service
 public class CalendarService {
     private final CalendarRepository calendarRepository;
-    private final DepartmentFeignClient departmentFeignClient;
+    private final AuthFeignClient authFeignClient;
 
     public CalendarService(CalendarRepository calendarRepository,
-                           DepartmentFeignClient departmentFeignClient) {
+                           AuthFeignClient authFeignClient) {
         this.calendarRepository = calendarRepository;
-        this.departmentFeignClient = departmentFeignClient;
+        this.authFeignClient = authFeignClient;
     }
 
     public Calendar createCalendar(Calendar calendar, long departmentId) throws IllegalArgumentException {
-        // department 호출할 경우 사용하는 코드
-//        Map<String, Object> department = departmentFeignClient.getDepartmentById(departmentId);
-//
-//        if (department.containsKey("departmentId")) {
-//            Long fetchDepartmentId = (Long) department.get("departmentId");
-//            String departmentName = (String) department.get("name");
-//
-//            calendar.setDepartmentId(fetchDepartmentId);
-//            calendar.setName(departmentName);
-//
-//            return calendarRepository.save(calendar);
-//        }
-//        else {
-//            throw new BusinessLogicException(ExceptionCode.DEPARTMENT_NOT_FOUND);
-//        }
+        SingleResponseDto<DepartmentDto> departmentDto = authFeignClient.getDepartmentById(departmentId);
 
-        // department없이 사용하는 일반 코드, 현재 calendar에는 name이 null로 저장됨
-        calendar.setDepartmentId(departmentId);
-        return calendarRepository.save(calendar);
+        if (departmentDto != null && departmentDto.getData().getId() != null) {
+            Long fetchDepartmentId = departmentDto.getData().getId(); // Long 타입이므로 바로 사용 가능
+            String departmentName = departmentDto.getData().getName(); // 부서 이름 가져오기
+
+            calendar.setDepartmentId(fetchDepartmentId);
+            calendar.setName(departmentName);
+
+            return calendarRepository.save(calendar);
+        }
+        else {
+            throw new BusinessLogicException(ExceptionCode.DEPARTMENT_NOT_FOUND);
+        }
     }
 
     public Calendar updateCalendar(Calendar calendar, long calendarId, long departmentId) {

@@ -45,8 +45,8 @@ public class BoardDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class Response {
-        private long boardId;
-        private long employeeId;
+        private Long boardId;
+        private Long employeeId;
         private String employeeName;
         private String title;
         private String content;

@@ -49,7 +49,7 @@ public class CarDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class Response {
-        private long carId;
+        private Long carId;
         private String name;
         private String number;
         private Car.FuelType fuel;

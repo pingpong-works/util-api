@@ -3,70 +3,66 @@ package com.util.book.service;
 import com.alarm.kafka.UtilProducer;
 import com.util.book.entity.CarBook;
 import com.util.book.repository.CarBookRepository;
+import com.util.dto.SingleResponseDto;
 import com.util.exception.BusinessLogicException;
 import com.util.exception.ExceptionCode;
-import com.util.feign.EmployeeFeignClient;
+import com.util.feign.AuthFeignClient;
+import com.util.feign.dto.EmployeeDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Transactional
 @Service
 public class CarBookService {
     private final CarBookRepository carBookRepository;
-    private final EmployeeFeignClient employeeFeignClient;
+    private final AuthFeignClient authFeignClient;
     private final UtilProducer utilProducer;
 
     public CarBookService(CarBookRepository carBookRepository,
-                          EmployeeFeignClient employeeFeignClient, UtilProducer utilProducer) {
+                          AuthFeignClient authFeignClient, UtilProducer utilProducer) {
         this.carBookRepository = carBookRepository;
-        this.employeeFeignClient = employeeFeignClient;
+        this.authFeignClient = authFeignClient;
         this.utilProducer = utilProducer;
     }
 
     public CarBook createCarBook(CarBook carBook, long employeeId) throws IllegalArgumentException {
-        // employee 호출할 경우 사용하는 코드
-//        Map<String, Object> employee = employeeFeignClient.getEmployeeById(employeeId);
-//
-//        if (employee.containsKey("employeeId")) {
-//            Long fetchEmployeeId = (Long) employee.get("employeeId");
-//            String employeeName = (String) employee.get("username");
-//
-//            carBook.setEmployeeId(fetchEmployeeId);
-//            carBook.setEmployeeName(employeeName);
-//
-//        boolean isBooking = carBookRepository.existsOverlappingBooking(
-//                carBook.getCar().getCarId(), carBook.getBookStart(), carBook.getBookEnd());
-//        if (isBooking) {
-//            throw new BusinessLogicException(ExceptionCode.BOOK_CONFLICT_BOOKING);
-//        }
+        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(employeeId);
 
-//            return carBookRepository.save(carBook);
-//        }
-//        else {
-//            throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
-//        }
+        if (employeeDto != null && employeeDto.getData().getEmployeeId() != null) {
+            Long fetchEmployeeId = employeeDto.getData().getEmployeeId();
+            String employeeName = employeeDto.getData().getName();
 
-        // employee없이 사용하는 일반 코드, 현재 carBook에는 username이 null로 저장됨
-        carBook.setEmployeeId(employeeId);
-        boolean isOverlapping = carBookRepository.existsOverlappingBooking(
-                carBook.getCar().getCarId(), carBook.getBookStart(), carBook.getBookEnd());
-        if (isOverlapping) {
-            throw new BusinessLogicException(ExceptionCode.BOOK_CONFLICT_BOOKING);
+            carBook.setEmployeeId(fetchEmployeeId);
+            carBook.setEmployeeName(employeeName);
+
+            boolean isBooking = carBookRepository.existsOverlappingBooking(
+                    carBook.getCar().getCarId(), carBook.getBookStart(), carBook.getBookEnd());
+            if (isBooking) {
+                throw new BusinessLogicException(ExceptionCode.BOOK_CONFLICT_BOOKING);
+            }
+
+            CarBook savedCarBook =  carBookRepository.save(carBook);
+            sendCarBookAlarm(savedCarBook, savedCarBook.getStatus().getStatus());
+
+            return savedCarBook;
         }
-
-        CarBook savedCarBook =  carBookRepository.save(carBook);
-        sendCarBookAlarm(savedCarBook, "신청");
-
-        return savedCarBook;
+        else {
+            throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
+        }
     }
 
-    public CarBook updateCarBook(CarBook carBook, long carBookId, long employeeId) {
+    public CarBook updateCarBook(CarBook carBook, long carBookId, long departmentId) {
         CarBook findCarBook = findVerifiedCarBook(carBookId);
+
+        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(findCarBook.getEmployeeId());
+
+        if (employeeDto.getData().getDepartmentId() != departmentId) {
+            throw new BusinessLogicException(ExceptionCode.CAR_BOOK_UNAUTHORIZED_ACTION);
+        }
 
         LocalDateTime originalBookStart = findCarBook.getBookStart();
         LocalDateTime originalBookEnd = findCarBook.getBookEnd();
@@ -93,8 +89,12 @@ public class CarBookService {
 
         Optional.ofNullable(carBook.getBookStart())
                 .ifPresent(bookStart -> findCarBook.setBookStart(bookStart));
+        Optional.ofNullable(carBook.getBookStart())
+                .ifPresent(bookStart -> findCarBook.getCalendar().setStartTime(bookStart));
         Optional.ofNullable(carBook.getBookEnd())
                 .ifPresent(bookEnd -> findCarBook.setBookEnd(bookEnd));
+        Optional.ofNullable(carBook.getBookEnd())
+                .ifPresent(bookEnd -> findCarBook.getCalendar().setEndTime(bookEnd));
         Optional.ofNullable(carBook.getPurpose())
                 .ifPresent(purpose -> findCarBook.setPurpose(purpose));
         Optional.ofNullable(carBook.getStatus())
@@ -107,7 +107,7 @@ public class CarBookService {
         if(savedCarBook.getStatus().equals(CarBook.StatusType.CANCELLED)
                 || savedCarBook.getStatus().equals(CarBook.StatusType.CONFIRMED)) {
 
-            sendCarBookAlarm(savedCarBook, savedCarBook.getStatus().getStatus().toString());
+            sendCarBookAlarm(savedCarBook, savedCarBook.getStatus().getStatus());
         }
 
         return  savedCarBook;
@@ -123,10 +123,12 @@ public class CarBookService {
         return carBookRepository.findAllByCar_CarId(carId);
     }
 
-    public void deleteCarBook(long carBookId, long employeeId) {
+    public void deleteCarBook(long carBookId, long departmentId) {
         CarBook findCarBook = findVerifiedCarBook(carBookId);
 
-        if (findCarBook.getEmployeeId() == employeeId) {
+        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(findCarBook.getEmployeeId());
+
+        if (employeeDto.getData().getDepartmentId() == departmentId) {
             carBookRepository.delete(findCarBook);
         }else {
             throw new BusinessLogicException(ExceptionCode.CAR_BOOK_UNAUTHORIZED_ACTION);
@@ -142,7 +144,7 @@ public class CarBookService {
     private void sendCarBookAlarm(CarBook carBook, String status) {
 
         utilProducer.sendBookCarNotification(carBook.getEmployeeId(),
-                String.format("차량[%s]의 예약[%s]이 완료되었습니다.", carBook.getCar().getNumber(), status),
+                String.format("차량[%s]의 예약이 [%s]되었습니다.", carBook.getCar().getNumber(), status),
                 carBook.getCarBookId());
     }
 }

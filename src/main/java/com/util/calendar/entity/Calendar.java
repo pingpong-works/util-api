@@ -8,8 +8,6 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Setter
@@ -18,7 +16,7 @@ import java.util.List;
 public class Calendar {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long calendarId;
+    private Long calendarId;
 
     @Column(name = "calendar_title")
     private String title;
@@ -38,23 +36,11 @@ public class Calendar {
     @Column(name = "department_name")
     private String name;
 
-    @OneToMany(mappedBy = "calendar", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private List<CarBook> carBooks = new ArrayList<>();
+    @OneToOne
+    @JoinColumn(name = "car_book_id")
+    private CarBook carBook;
 
-    public void setCarBook(CarBook carBook) {
-        carBooks.add(carBook);
-        if (carBook.getCalendar() != this) {
-            carBook.setCalendar(this);
-        }
-    }
-
-    @OneToMany(mappedBy = "calendar", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    private List<RoomBook> roomBooks = new ArrayList<>();
-
-    public void setRoomBook(RoomBook roomBook) {
-        roomBooks.add(roomBook);
-        if (roomBook.getCalendar() != this) {
-            roomBook.setCalendar(this);
-        }
-    }
+    @OneToOne
+    @JoinColumn(name = "room_book_id")
+    private RoomBook roomBook;
 }

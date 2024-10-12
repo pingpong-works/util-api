@@ -47,7 +47,7 @@ public class RoomDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class Response {
-        private long roomId;
+        private Long roomId;
         private String name;
         private int maxCapacity;
         private List<String> equipment;

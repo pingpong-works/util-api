@@ -44,14 +44,13 @@ public class RoomBookDto {
     @AllArgsConstructor
     @NoArgsConstructor
     public static class Response {
-        private long roomBookId;
+        private Long roomBookId;
         private LocalDateTime bookStart;
         private LocalDateTime bookEnd;
         private RoomBook.PurposeType purpose;
         private RoomBook.StatusType status;
-        private long employeeId;
+        private Long employeeId;
         private String employeeName;
-        private long roomId;
-        private long calendarId;
+        private Long roomId;
     }
 }

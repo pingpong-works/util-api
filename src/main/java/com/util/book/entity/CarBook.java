@@ -8,8 +8,6 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Setter
@@ -18,7 +16,7 @@ import java.util.List;
 public class CarBook {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long carBookId;
+    private Long carBookId;
 
     @Column(name = "car_book_start")
     private LocalDateTime bookStart;
@@ -51,16 +49,8 @@ public class CarBook {
         }
     }
 
-    @ManyToOne
-    @JoinColumn(name = "calendar_id")
+    @OneToOne(mappedBy = "carBook", cascade = CascadeType.ALL)
     private Calendar calendar;
-
-    public void setCalendar(Calendar calendar) {
-        this.calendar = calendar;
-        if (!calendar.getCarBooks().contains(this)) {
-            calendar.setCarBook(this);
-        }
-    }
 
     public enum PurposeType {
         BUSINESS("업무"),

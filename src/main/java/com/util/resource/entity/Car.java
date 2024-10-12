@@ -18,7 +18,7 @@ import java.util.Map;
 public class Car {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long carId;
+    private Long carId;
 
     @Column(name = "car_name")
     private String name;

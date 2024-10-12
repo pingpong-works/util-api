@@ -4,9 +4,11 @@ import com.util.board.entity.Board;
 import com.util.board.entity.BoardComment;
 import com.util.board.repository.BoardCommentRepository;
 import com.util.board.repository.BoardRepository;
+import com.util.dto.SingleResponseDto;
 import com.util.exception.BusinessLogicException;
 import com.util.exception.ExceptionCode;
-import com.util.feign.EmployeeFeignClient;
+import com.util.feign.AuthFeignClient;
+import com.util.feign.dto.EmployeeDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,32 +18,32 @@ import java.util.*;
 @Service
 public class BoardCommentService {
     private final BoardService boardService;
-    private final EmployeeFeignClient employeeFeignClient;
+    private final AuthFeignClient authFeignClient;
     private final BoardRepository boardRepository;
     private final BoardCommentRepository boardCommentRepository;
 
     public BoardCommentService(BoardService boardService,
-                               EmployeeFeignClient employeeFeignClient,
+                               AuthFeignClient authFeignClient,
                                BoardRepository boardRepository,
                                BoardCommentRepository boardCommentRepository) {
         this.boardService = boardService;
-        this.employeeFeignClient = employeeFeignClient;
+        this.authFeignClient = authFeignClient;
         this.boardRepository = boardRepository;
         this.boardCommentRepository = boardCommentRepository;
     }
 
     public BoardComment createBoardComment(BoardComment boardComment, long employeeId) throws IllegalArgumentException {
-//        Map<String, Object> employee = employeeFeignClient.getEmployeeById(employeeId);
+        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(employeeId);
 
-//        if (employee.containsKey("employeeId")) {
-//            Long fetchEmployeeId = (Long) employee.get("employeeId");
-//            String employeeName = (String) employee.get("username");
+        if (employeeDto != null && employeeDto.getData().getEmployeeId() != null) {
+            Long fetchEmployeeId = employeeDto.getData().getEmployeeId();
+            String employeeName = employeeDto.getData().getName();
 
             Board board = boardService.findVerifiedBoard(boardComment.getBoard().getBoardId());
 
             boardComment.setBoard(board);
-//            boardComment.setEmployeeId(fetchEmployeeId);
-//            boardComment.setEmployeeName(employeeName);
+            boardComment.setEmployeeId(fetchEmployeeId);
+            boardComment.setEmployeeName(employeeName);
 
             if (boardComment.getParentComment() != null) {
                 BoardComment parentComment = boardCommentRepository.findById(boardComment.getParentComment().getBoardCommentId())
@@ -55,14 +57,13 @@ public class BoardCommentService {
                 boardComment.setParentComment(null);
             }
 
-            boardComment.setEmployeeId(employeeId); // feign 사용시 지워야됨
             board.setCommentCount(board.getCommentCount() + 1);
             boardRepository.save(board);
             return boardCommentRepository.save(boardComment);
-//        }
-//        else {
-//            throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
-//        }
+        }
+        else {
+            throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
+        }
     }
 
     public BoardComment updateBoardComment(long boardCommentId, BoardComment boardComment, long employeeId) {
