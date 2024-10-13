@@ -18,6 +18,9 @@ public interface AuthFeignClient {
     @GetMapping("/employees")
     List<Long> getEmployeeIds();
 
+    @GetMapping("departments/{department-id}/employees")
+    List<Long> getEmployeeIdsByDepartment(@PathVariable("department-id") Long departmentId);
+
     @GetMapping("/departments/{id}")
     SingleResponseDto<DepartmentDto> getDepartmentById(@PathVariable("id") Long departmentId );
 }
