@@ -77,9 +77,11 @@ public class CarBookController {
     @PatchMapping("/car-books/{book-id}")
     public ResponseEntity patchCarBook(@PathVariable("book-id") @Positive long carBookId,
                                        @Valid @RequestBody CarBookDto.Patch requestBody,
-                                       @RequestParam("departmentId") @Positive long departmentId) {
+                                       @RequestParam("departmentId") @Positive long departmentId,
+                                       @RequestParam(value = "title", required = false) String title,
+                                       @RequestParam(value = "content", required = false) String content) {
         CarBook updateCarBook = mapper.carBookPatchDtoToCarBook(requestBody);
-        CarBook carBook = carBookService.updateCarBook(updateCarBook, carBookId, departmentId);
+        CarBook carBook = carBookService.updateCarBook(updateCarBook, carBookId, departmentId, title, content);
         return new ResponseEntity<>(
                 new SingleResponseDto<>(mapper.carBookToCarBookResponseDto(carBook)), HttpStatus.OK);
     }

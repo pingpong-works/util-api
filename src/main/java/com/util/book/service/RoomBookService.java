@@ -3,6 +3,7 @@ package com.util.book.service;
 import com.alarm.kafka.UtilProducer;
 import com.util.book.entity.RoomBook;
 import com.util.book.repository.RoomBookRepository;
+import com.util.calendar.repository.CalendarRepository;
 import com.util.dto.SingleResponseDto;
 import com.util.exception.BusinessLogicException;
 import com.util.exception.ExceptionCode;
@@ -21,12 +22,14 @@ public class RoomBookService {
     private final RoomBookRepository roomBookRepository;
     private final AuthFeignClient authFeignClient;
     private final UtilProducer utilProducer;
+    private final CalendarRepository calendarRepository;
 
     public RoomBookService(RoomBookRepository roomBookRepository,
-                           AuthFeignClient authFeignClient, UtilProducer utilProducer) {
+                           AuthFeignClient authFeignClient, UtilProducer utilProducer, CalendarRepository calendarRepository) {
         this.roomBookRepository = roomBookRepository;
         this.authFeignClient = authFeignClient;
         this.utilProducer = utilProducer;
+        this.calendarRepository = calendarRepository;
     }
 
     public RoomBook createRoomBook(RoomBook roomBook, long employeeId) throws IllegalArgumentException {
@@ -55,7 +58,7 @@ public class RoomBookService {
         }
     }
 
-    public RoomBook updateRoomBook(RoomBook roomBook, long roomBookId, long departmentId) {
+    public RoomBook updateRoomBook(RoomBook roomBook, long roomBookId, long departmentId, String title, String content) {
         RoomBook findRoomBook = findVerifiedroomBook(roomBookId);
 
         SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(findRoomBook.getEmployeeId());
@@ -88,6 +91,10 @@ public class RoomBookService {
             }
         }
 
+        Optional.ofNullable(title)
+                .ifPresent(t -> findRoomBook.getCalendar().setTitle(t));
+        Optional.ofNullable(content)
+                .ifPresent(c -> findRoomBook.getCalendar().setContent(c));
         Optional.ofNullable(roomBook.getBookStart())
                 .ifPresent(bookStart -> findRoomBook.setBookStart(bookStart));
         Optional.ofNullable(roomBook.getBookStart())
@@ -102,6 +109,7 @@ public class RoomBookService {
                 .ifPresent(status -> findRoomBook.setStatus(status));
 
         RoomBook savedRoomBook = roomBookRepository.save(findRoomBook);
+        calendarRepository.save(findRoomBook.getCalendar());
 
         //예약 상태 변경 시 알림 발송
         if(savedRoomBook.getStatus().equals(RoomBook.StatusType.CANCELLED)

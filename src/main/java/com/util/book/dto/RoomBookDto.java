@@ -23,8 +23,6 @@ public class RoomBookDto {
         @NotNull
         private RoomBook.PurposeType purpose;
 
-        @NotNull
-        private RoomBook.StatusType status;
     }
 
     @Getter

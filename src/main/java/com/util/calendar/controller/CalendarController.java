@@ -58,8 +58,17 @@ public class CalendarController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CalendarDto.Response>> getCalendars() {
-        List<Calendar> calendars = calendarService.findAllCalendar();
+    public ResponseEntity<List<CalendarDto.Response>> getCalendars(@RequestParam(value = "departmentId", required = false) Long departmentId) {
+
+        List<Calendar> calendars;
+
+        // departmentId가 존재하면 해당 부서의 일정 조회, 없으면 전체 조회
+        if (departmentId != null) {
+            calendars = calendarService.findCalendarsByDepartment(departmentId);
+        } else {
+            calendars = calendarService.findAllCalendar();
+        }
+
         List<CalendarDto.Response> response = mapper.calendarToCalendarResponseDtos(calendars);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }

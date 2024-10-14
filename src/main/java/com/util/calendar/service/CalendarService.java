@@ -98,6 +98,11 @@ public class CalendarService {
     }
 
     @Transactional(readOnly = true)
+    public List<Calendar> findCalendarsByDepartment(long departmentId) {
+        return calendarRepository.findByDepartmentId(departmentId);
+    }
+
+    @Transactional(readOnly = true)
     public List<Calendar> findAllCalendar() {
         return calendarRepository.findAll();
     }

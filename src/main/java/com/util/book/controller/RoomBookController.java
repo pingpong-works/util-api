@@ -77,9 +77,11 @@ public class RoomBookController {
     @PatchMapping("/room-books/{book-id}")
     public ResponseEntity patchRoomBook(@PathVariable("book-id") @Positive long roomBookId,
                                        @Valid @RequestBody RoomBookDto.Patch requestBody,
-                                       @RequestParam("departmentId") @Positive long departmentId) {
+                                       @RequestParam("departmentId") @Positive long departmentId,
+                                        @RequestParam(value = "title", required = false) String title,
+                                        @RequestParam(value = "content", required = false) String content) {
         RoomBook updateRoomBook = mapper.roomBookPatchDtoToRoomBook(requestBody);
-        RoomBook roomBook = roomBookService.updateRoomBook(updateRoomBook, roomBookId, departmentId);
+        RoomBook roomBook = roomBookService.updateRoomBook(updateRoomBook, roomBookId, departmentId, title, content);
         return new ResponseEntity<>(
                 new SingleResponseDto<>(mapper.roomBookToRoomBookResponseDto(roomBook)), HttpStatus.OK);
     }

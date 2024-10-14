@@ -3,6 +3,7 @@ package com.util.book.service;
 import com.alarm.kafka.UtilProducer;
 import com.util.book.entity.CarBook;
 import com.util.book.repository.CarBookRepository;
+import com.util.calendar.repository.CalendarRepository;
 import com.util.dto.SingleResponseDto;
 import com.util.exception.BusinessLogicException;
 import com.util.exception.ExceptionCode;
@@ -21,12 +22,14 @@ public class CarBookService {
     private final CarBookRepository carBookRepository;
     private final AuthFeignClient authFeignClient;
     private final UtilProducer utilProducer;
+    private final CalendarRepository calendarRepository;
 
     public CarBookService(CarBookRepository carBookRepository,
-                          AuthFeignClient authFeignClient, UtilProducer utilProducer) {
+                          AuthFeignClient authFeignClient, UtilProducer utilProducer, CalendarRepository calendarRepository) {
         this.carBookRepository = carBookRepository;
         this.authFeignClient = authFeignClient;
         this.utilProducer = utilProducer;
+        this.calendarRepository = calendarRepository;
     }
 
     public CarBook createCarBook(CarBook carBook, long employeeId) throws IllegalArgumentException {
@@ -55,7 +58,7 @@ public class CarBookService {
         }
     }
 
-    public CarBook updateCarBook(CarBook carBook, long carBookId, long departmentId) {
+    public CarBook updateCarBook(CarBook carBook, long carBookId, long departmentId, String title, String content) {
         CarBook findCarBook = findVerifiedCarBook(carBookId);
 
         SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(findCarBook.getEmployeeId());
@@ -87,6 +90,10 @@ public class CarBookService {
             }
         }
 
+        Optional.ofNullable(title)
+                .ifPresent(t -> findCarBook.getCalendar().setTitle(t));
+        Optional.ofNullable(content)
+                .ifPresent(c -> findCarBook.getCalendar().setContent(c));
         Optional.ofNullable(carBook.getBookStart())
                 .ifPresent(bookStart -> findCarBook.setBookStart(bookStart));
         Optional.ofNullable(carBook.getBookStart())
@@ -101,6 +108,7 @@ public class CarBookService {
                 .ifPresent(status -> findCarBook.setStatus(status));
 
         CarBook savedCarBook =  carBookRepository.save(findCarBook);
+        calendarRepository.save(findCarBook.getCalendar());
 
 
         //예약 상태 변경 시 알림 발송

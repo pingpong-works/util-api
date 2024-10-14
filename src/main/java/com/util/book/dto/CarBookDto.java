@@ -24,8 +24,6 @@ public class CarBookDto {
         @NotNull
         private CarBook.PurposeType purpose;
 
-        @NotNull
-        private CarBook.StatusType status;
     }
 
     @Getter
