@@ -1,6 +1,7 @@
 package com.util.board.service;
 
 import com.alarm.kafka.UtilProducer;
+import com.util.board.BoardSpecification;
 import com.util.board.entity.Board;
 import com.util.board.repository.BoardRepository;
 import com.util.dto.SingleResponseDto;
@@ -10,6 +11,7 @@ import com.util.feign.AuthFeignClient;
 import com.util.feign.dto.EmployeeDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,9 +45,9 @@ public class BoardService {
             Board savedBoard = boardRepository.save(board);
 
             //공지사항이 등록되었을 때 알림 발송 기능 (category = notice) > 전체 직원에게 발송...
-            if(savedBoard.getCategory().equalsIgnoreCase("공지")) {
-                sendNoticeEmployees(savedBoard);
-            }
+//            if(savedBoard.getCategory().equalsIgnoreCase("공지")) {
+//                sendNoticeEmployees(savedBoard);
+//            }
 
             return savedBoard;
         }
@@ -85,24 +87,28 @@ public class BoardService {
         return findBoard;
     }
 
-    @Transactional(readOnly = true)
-    public Page<Board> searchBoardTitle(Pageable pageable, String keyword) {
-        return boardRepository.searchByTitle(pageable, keyword);
-    }
+   public Page<Board> searchBoards (String category, String keyword, String searchOption, Pageable pageable) {
+        Specification<Board> spec = Specification.where(BoardSpecification.hasCategory(category));
 
-    @Transactional(readOnly = true)
-    public Page<Board> searchBoardContent(Pageable pageable, String keyword) {
-        return boardRepository.searchByContent(pageable, keyword);
-    }
+        // 검색 옵션에 따른 동적 쿼리 조합
+        if (keyword != null && !keyword.isEmpty()) {
+            switch (searchOption) {
+                case "title":
+                    spec = spec.and(BoardSpecification.hasTitleKeyword(keyword));
+                    break;
+                case "content":
+                    spec = spec.and(BoardSpecification.hasContentKeyword(keyword));
+                    break;
+                case "title_content":
+                    spec = spec.and(BoardSpecification.hasTitleOrContentKeyword(keyword));
+                    break;
+                case "employeeName":
+                    spec = spec.and(BoardSpecification.hasEmployeeName(keyword));
+                    break;
+            }
+        }
 
-    @Transactional(readOnly = true)
-    public Page<Board> searchBoardTitleOrContent(Pageable pageable, String keyword) {
-        return boardRepository.searchByTitleOrContent(pageable, keyword);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<Board> searchBoardEmployeeName(Pageable pageable, String keyword) {
-        return boardRepository.searchByEmployeeName(pageable, keyword);
+        return boardRepository.findAll(spec, pageable);
     }
 
     public void deleteBoard(long boardId, long employeeId) {

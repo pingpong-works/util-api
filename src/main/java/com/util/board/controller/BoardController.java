@@ -69,41 +69,24 @@ public class BoardController {
     public ResponseEntity getBoards(@RequestParam("keyword") String keyword,
                                     @RequestParam("searchOption") String searchOption,
                                     @RequestParam(required = false) String sort,
-                                    @PageableDefault(sort = "boardId", direction = Sort.Direction.DESC) Pageable pageable) {
+                                    @PageableDefault(sort = "boardId", direction = Sort.Direction.DESC) Pageable pageable,
+                                    @RequestParam("category") String category) {
         if (sort != null) {
             Sort sortOrder = Sort.by(sort.split("_")[0]).ascending();
             if (sort.split("_")[1].equalsIgnoreCase("desc")) {
                 sortOrder = sortOrder.descending();
             }
-            pageable = PageRequest.of(pageable.getPageNumber() - 1, pageable.getPageSize(), sortOrder);
+            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sortOrder);
         }
 
-        Page<Board> searchList;
-
-        switch (searchOption) {
-            case "title":
-                searchList = boardService.searchBoardTitle(pageable, keyword);
-                break;
-            case "content":
-                searchList = boardService.searchBoardContent(pageable, keyword);
-                break;
-            case "title_content":
-                searchList = boardService.searchBoardTitleOrContent(pageable, keyword);
-                break;
-            case "employeeName":
-                searchList = boardService.searchBoardEmployeeName(pageable, keyword);
-                break;
-            default:
-                throw new IllegalArgumentException("유효한 검색 옵션이 아닙니다.");
-        }
+        Page<Board> searchList = boardService.searchBoards(category, keyword, searchOption, pageable);
 
         List<BoardDto.Response> responseList = searchList.stream()
                 .map(mapper::boardToBoardResponseDto)
                 .collect(Collectors.toList());
 
         return new ResponseEntity<>(
-                new MultiResponseDto<>(responseList, searchList), HttpStatus.OK);
-    }
+                new MultiResponseDto<>(responseList, searchList), HttpStatus.OK);}
 
     @DeleteMapping("/{board-id}")
     public ResponseEntity deleteBoard(@PathVariable("board-id") @Positive long boardId,
