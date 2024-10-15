@@ -45,9 +45,9 @@ public class BoardService {
             Board savedBoard = boardRepository.save(board);
 
             //공지사항이 등록되었을 때 알림 발송 기능 (category = notice) > 전체 직원에게 발송...
-//            if(savedBoard.getCategory().equalsIgnoreCase("공지")) {
-//                sendNoticeEmployees(savedBoard);
-//            }
+            if(savedBoard.getCategory().equalsIgnoreCase("공지")) {
+                sendNoticeEmployees(savedBoard);
+            }
 
             return savedBoard;
         }
