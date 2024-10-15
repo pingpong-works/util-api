@@ -2,7 +2,6 @@ package com.util.config;
 
 
 
-import com.util.image.service.FileSystemStorageService;
 import com.util.image.service.ImageService;
 import com.util.image.service.S3StorageService;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,12 +20,6 @@ public class ImageConfiguration {
     private String accessKey;
     @Value("${cloud.aws.credentials.secretkey}")
     private String secretKey;
-
-//    @Primary
-    @Bean
-    public ImageService fileSystemStorageService() {
-        return new FileSystemStorageService();
-    }
 
     @Bean
     @Primary

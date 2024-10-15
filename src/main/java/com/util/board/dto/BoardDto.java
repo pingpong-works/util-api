@@ -56,6 +56,5 @@ public class BoardDto {
         private LocalDateTime createdAt;
         private LocalDateTime modifiedAt;
         private List<String> imageUrls;
-        private List<BoardCommentDto.Response> boardCommentList;
     }
 }

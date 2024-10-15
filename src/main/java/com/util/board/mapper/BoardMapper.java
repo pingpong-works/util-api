@@ -3,7 +3,6 @@ package com.util.board.mapper;
 import com.util.board.dto.BoardDto;
 import com.util.board.entity.Board;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 
 import java.util.List;
 
@@ -14,7 +13,6 @@ public interface BoardMapper {
 
     Board boardPatchDtoToBoard(BoardDto.Patch requestBody);
 
-    @Mapping(target = "boardCommentList", qualifiedByName = "boardCommentToBoardCommentResponse")
     BoardDto.Response boardToBoardResponseDto(Board board);
 
     List<BoardDto.Response> boardsToBoardResponseDtos(List<Board> boards);

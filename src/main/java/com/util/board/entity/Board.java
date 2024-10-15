@@ -35,6 +35,7 @@ public class Board extends Auditable {
 
     @Column(name = "board_image_urls")
     @ElementCollection
+    @Lob
     private List<String> imageUrls = new ArrayList<>();
 
     @Column(name = "employee_id")
