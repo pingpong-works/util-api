@@ -9,9 +9,7 @@ import com.util.resource.repository.CarRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Transactional
@@ -41,10 +39,8 @@ public class CarService {
     }
 
     public Car updateCar(Car car, long carId, long employeeId, List<String> imagesToDelete) {
-        // 기존 차량 정보를 가져옴
         Car findCar = findVerifiedCar(carId);
 
-        // 직원 정보 확인
         UserResponse employeeDto = authFeignClient.getEmployeeById(employeeId);
 
         if (employeeDto.getData().getEmployeeId() == null) {
@@ -55,7 +51,6 @@ public class CarService {
             throw new BusinessLogicException(ExceptionCode.CAR_UNAUTHORIZED_ACTION);
         }
 
-        // 차량 정보 업데이트
         Optional.ofNullable(car.getName())
                 .ifPresent(name -> findCar.setName(name));
         Optional.ofNullable(car.getNumber())
@@ -66,33 +61,12 @@ public class CarService {
                 .ifPresent(fuelType -> findCar.setFuel(fuelType));
 
         Optional.ofNullable(car.getImages())
-                .ifPresent(newImages -> {
-                    List<Map<String, String>> existingImages = findCar.getImages();
-                    if (existingImages == null) {
-                        existingImages = new ArrayList<>();
-                    }
-
-                    for (Map<String, String> newImage : newImages) {
-                        existingImages.add(newImage);
-                    }
-
-                    findCar.setImages(existingImages);
-                });
-
+                .ifPresent(newImages -> findCar.getImages().putAll(newImages));
         Optional.ofNullable(imagesToDelete)
-                .ifPresent(toDelete -> {
-                    List<Map<String, String>> existingImages = findCar.getImages();
-
-                    if (existingImages != null) {
-                        existingImages.removeIf(image -> toDelete.contains(image.get("url")));
-                    }
-
-                    findCar.setImages(existingImages);
-                });
+                .ifPresent(toDelete -> toDelete.forEach(url -> findCar.getImages().remove(url)));
 
         return carRepository.save(findCar);
     }
-
 
     public Car findCar(long carId) {
         Car findCar = findVerifiedCar(carId);
