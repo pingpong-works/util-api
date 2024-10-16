@@ -4,11 +4,10 @@ import com.alarm.kafka.UtilProducer;
 import com.util.book.entity.RoomBook;
 import com.util.book.repository.RoomBookRepository;
 import com.util.calendar.repository.CalendarRepository;
-import com.util.dto.SingleResponseDto;
 import com.util.exception.BusinessLogicException;
 import com.util.exception.ExceptionCode;
 import com.util.feign.AuthFeignClient;
-import com.util.feign.dto.EmployeeDto;
+import com.util.feign.UserResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +32,7 @@ public class RoomBookService {
     }
 
     public RoomBook createRoomBook(RoomBook roomBook, long employeeId) throws IllegalArgumentException {
-        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(employeeId);
+        UserResponse employeeDto = authFeignClient.getEmployeeById(employeeId);
 
         if (employeeDto != null && employeeDto.getData().getEmployeeId() != null) {
             Long fetchEmployeeId = employeeDto.getData().getEmployeeId();
@@ -61,11 +60,12 @@ public class RoomBookService {
     public RoomBook updateRoomBook(RoomBook roomBook, long roomBookId, long departmentId, String title, String content) {
         RoomBook findRoomBook = findVerifiedroomBook(roomBookId);
 
-        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(findRoomBook.getEmployeeId());
+        UserResponse employeeDto = authFeignClient.getEmployeeById(findRoomBook.getEmployeeId());
 
         if (employeeDto.getData().getDepartmentId() != departmentId) {
             throw new BusinessLogicException(ExceptionCode.CAR_BOOK_UNAUTHORIZED_ACTION);
         }
+
 
         LocalDateTime originalBookStart = findRoomBook.getBookStart();
         LocalDateTime originalBookEnd = findRoomBook.getBookEnd();
@@ -133,15 +133,16 @@ public class RoomBookService {
     }
 
     public void deleteRoomBook(long roomBookId, long departmentId) {
-        RoomBook findroomBook = findVerifiedroomBook(roomBookId);
+        RoomBook findRoomBook = findVerifiedroomBook(roomBookId);
 
-        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(findroomBook.getEmployeeId());
+        UserResponse employeeDto = authFeignClient.getEmployeeById(findRoomBook.getEmployeeId());
 
         if (employeeDto.getData().getDepartmentId() == departmentId) {
-            roomBookRepository.delete(findroomBook);
+            roomBookRepository.delete(findRoomBook);
         }else {
             throw new BusinessLogicException(ExceptionCode.ROOM_BOOK_UNAUTHORIZED_ACTION);
         }
+
     }
 
     public RoomBook findVerifiedroomBook(long roomBookId) {

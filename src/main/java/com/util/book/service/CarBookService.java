@@ -4,11 +4,10 @@ import com.alarm.kafka.UtilProducer;
 import com.util.book.entity.CarBook;
 import com.util.book.repository.CarBookRepository;
 import com.util.calendar.repository.CalendarRepository;
-import com.util.dto.SingleResponseDto;
 import com.util.exception.BusinessLogicException;
 import com.util.exception.ExceptionCode;
 import com.util.feign.AuthFeignClient;
-import com.util.feign.dto.EmployeeDto;
+import com.util.feign.UserResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +32,7 @@ public class CarBookService {
     }
 
     public CarBook createCarBook(CarBook carBook, long employeeId) throws IllegalArgumentException {
-        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(employeeId);
+        UserResponse employeeDto = authFeignClient.getEmployeeById(employeeId);
 
         if (employeeDto != null && employeeDto.getData().getEmployeeId() != null) {
             Long fetchEmployeeId = employeeDto.getData().getEmployeeId();
@@ -61,7 +60,7 @@ public class CarBookService {
     public CarBook updateCarBook(CarBook carBook, long carBookId, long departmentId, String title, String content) {
         CarBook findCarBook = findVerifiedCarBook(carBookId);
 
-        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(findCarBook.getEmployeeId());
+        UserResponse employeeDto = authFeignClient.getEmployeeById(findCarBook.getEmployeeId());
 
         if (employeeDto.getData().getDepartmentId() != departmentId) {
             throw new BusinessLogicException(ExceptionCode.CAR_BOOK_UNAUTHORIZED_ACTION);
@@ -134,7 +133,7 @@ public class CarBookService {
     public void deleteCarBook(long carBookId, long departmentId) {
         CarBook findCarBook = findVerifiedCarBook(carBookId);
 
-        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(findCarBook.getEmployeeId());
+        UserResponse employeeDto = authFeignClient.getEmployeeById(findCarBook.getEmployeeId());
 
         if (employeeDto.getData().getDepartmentId() == departmentId) {
             carBookRepository.delete(findCarBook);

@@ -4,11 +4,10 @@ import com.util.board.entity.Board;
 import com.util.board.entity.BoardComment;
 import com.util.board.repository.BoardCommentRepository;
 import com.util.board.repository.BoardRepository;
-import com.util.dto.SingleResponseDto;
 import com.util.exception.BusinessLogicException;
 import com.util.exception.ExceptionCode;
 import com.util.feign.AuthFeignClient;
-import com.util.feign.dto.EmployeeDto;
+import com.util.feign.UserResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +32,7 @@ public class BoardCommentService {
     }
 
     public BoardComment createBoardComment(BoardComment boardComment, long employeeId) throws IllegalArgumentException {
-        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(employeeId);
+        UserResponse employeeDto = authFeignClient.getEmployeeById(employeeId);
 
         if (employeeDto != null && employeeDto.getData().getEmployeeId() != null) {
             Long fetchEmployeeId = employeeDto.getData().getEmployeeId();

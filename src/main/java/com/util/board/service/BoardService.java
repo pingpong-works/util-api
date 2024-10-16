@@ -4,11 +4,10 @@ import com.alarm.kafka.UtilProducer;
 import com.util.board.BoardSpecification;
 import com.util.board.entity.Board;
 import com.util.board.repository.BoardRepository;
-import com.util.dto.SingleResponseDto;
 import com.util.exception.BusinessLogicException;
 import com.util.exception.ExceptionCode;
 import com.util.feign.AuthFeignClient;
-import com.util.feign.dto.EmployeeDto;
+import com.util.feign.UserResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -34,7 +33,7 @@ public class BoardService {
     }
 
     public Board createBoard(Board board, long employeeId) throws IllegalArgumentException {
-        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(employeeId);
+        UserResponse employeeDto = authFeignClient.getEmployeeById(employeeId);
 
         if (employeeDto != null && employeeDto.getData().getEmployeeId() != null) {
             Long fetchEmployeeId = employeeDto.getData().getEmployeeId();
@@ -54,6 +53,7 @@ public class BoardService {
         else {
             throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
         }
+
     }
 
     public Board updateBoard(Board board, long boardId, long employeeId, List<String> imagesToDelete) throws IllegalArgumentException {

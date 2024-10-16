@@ -1,10 +1,9 @@
 package com.util.resource.service;
 
-import com.util.dto.SingleResponseDto;
 import com.util.exception.BusinessLogicException;
 import com.util.exception.ExceptionCode;
 import com.util.feign.AuthFeignClient;
-import com.util.feign.dto.EmployeeDto;
+import com.util.feign.UserResponse;
 import com.util.resource.entity.Room;
 import com.util.resource.repository.RoomRepository;
 import org.springframework.stereotype.Service;
@@ -26,13 +25,13 @@ public class RoomService {
     }
 
     public Room createRoom(Room room, long employeeId) throws IllegalArgumentException {
-        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(employeeId);
+        UserResponse employeeDto = authFeignClient.getEmployeeById(employeeId);
 
         if (employeeDto.getData().getEmployeeId() == null) {
             throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
         }
 
-        if (!employeeDto.getData().getName().equals("관리자")) {
+        if (!employeeDto.getData().getEmail().equals("admin@pingpong-works.com")) {
             throw new BusinessLogicException(ExceptionCode.CAR_UNAUTHORIZED_ACTION);
         }
         return roomRepository.save(room);
@@ -41,13 +40,13 @@ public class RoomService {
     public Room updateRoom(Room room, long roomId, long employeeId, List<String> equipmentsToDelete) {
         Room findRoom = findVerifiedRoom(roomId);
 
-        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(employeeId);
+        UserResponse employeeDto = authFeignClient.getEmployeeById(employeeId);
 
         if (employeeDto.getData().getEmployeeId() == null) {
             throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
         }
 
-        if (!employeeDto.getData().getName().equals("관리자")) {
+        if (!employeeDto.getData().getEmail().equals("admin@pingpong-works.com")) {
             throw new BusinessLogicException(ExceptionCode.CAR_UNAUTHORIZED_ACTION);
         }
 
@@ -84,13 +83,13 @@ public class RoomService {
     }
 
     public void deleteRoom(long roomId, long employeeId) {
-        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(employeeId);
+        UserResponse employeeDto = authFeignClient.getEmployeeById(employeeId);
 
         if (employeeDto.getData().getEmployeeId() == null) {
             throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
         }
 
-        if (!employeeDto.getData().getName().equals("관리자")) {
+        if (!employeeDto.getData().getEmail().equals("admin@pingpong-works.com")) {
             throw new BusinessLogicException(ExceptionCode.CAR_UNAUTHORIZED_ACTION);
         }
         Room findRoom = findVerifiedRoom(roomId);

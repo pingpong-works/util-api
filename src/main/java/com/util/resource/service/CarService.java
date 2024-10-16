@@ -1,16 +1,17 @@
 package com.util.resource.service;
 
-import com.util.dto.SingleResponseDto;
 import com.util.exception.BusinessLogicException;
 import com.util.exception.ExceptionCode;
 import com.util.feign.AuthFeignClient;
-import com.util.feign.dto.EmployeeDto;
+import com.util.feign.UserResponse;
 import com.util.resource.entity.Car;
 import com.util.resource.repository.CarRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Transactional
@@ -26,7 +27,7 @@ public class CarService {
     }
 
     public Car createCar(Car car, long employeeId) throws IllegalArgumentException {
-        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(employeeId);
+        UserResponse employeeDto = authFeignClient.getEmployeeById(employeeId);
 
         if (employeeDto.getData().getEmployeeId() == null) {
             throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
@@ -40,9 +41,11 @@ public class CarService {
     }
 
     public Car updateCar(Car car, long carId, long employeeId, List<String> imagesToDelete) {
+        // 기존 차량 정보를 가져옴
         Car findCar = findVerifiedCar(carId);
 
-        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(employeeId);
+        // 직원 정보 확인
+        UserResponse employeeDto = authFeignClient.getEmployeeById(employeeId);
 
         if (employeeDto.getData().getEmployeeId() == null) {
             throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);
@@ -52,6 +55,7 @@ public class CarService {
             throw new BusinessLogicException(ExceptionCode.CAR_UNAUTHORIZED_ACTION);
         }
 
+        // 차량 정보 업데이트
         Optional.ofNullable(car.getName())
                 .ifPresent(name -> findCar.setName(name));
         Optional.ofNullable(car.getNumber())
@@ -62,12 +66,33 @@ public class CarService {
                 .ifPresent(fuelType -> findCar.setFuel(fuelType));
 
         Optional.ofNullable(car.getImages())
-                .ifPresent(newImages -> findCar.getImages().putAll(newImages));
+                .ifPresent(newImages -> {
+                    List<Map<String, String>> existingImages = findCar.getImages();
+                    if (existingImages == null) {
+                        existingImages = new ArrayList<>();
+                    }
+
+                    for (Map<String, String> newImage : newImages) {
+                        existingImages.add(newImage);
+                    }
+
+                    findCar.setImages(existingImages);
+                });
+
         Optional.ofNullable(imagesToDelete)
-                .ifPresent(toDelete -> toDelete.forEach(url -> findCar.getImages().remove(url)));
+                .ifPresent(toDelete -> {
+                    List<Map<String, String>> existingImages = findCar.getImages();
+
+                    if (existingImages != null) {
+                        existingImages.removeIf(image -> toDelete.contains(image.get("url")));
+                    }
+
+                    findCar.setImages(existingImages);
+                });
 
         return carRepository.save(findCar);
     }
+
 
     public Car findCar(long carId) {
         Car findCar = findVerifiedCar(carId);
@@ -85,7 +110,7 @@ public class CarService {
     }
     
     public void deleteCar(long carId, long employeeId) {
-        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(employeeId);
+        UserResponse employeeDto = authFeignClient.getEmployeeById(employeeId);
 
         if (employeeDto.getData().getEmployeeId() == null) {
             throw new BusinessLogicException(ExceptionCode.EMPLOYEE_NOT_FOUND);

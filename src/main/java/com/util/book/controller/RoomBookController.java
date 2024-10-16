@@ -8,7 +8,7 @@ import com.util.calendar.entity.Calendar;
 import com.util.calendar.service.CalendarService;
 import com.util.dto.SingleResponseDto;
 import com.util.feign.AuthFeignClient;
-import com.util.feign.dto.EmployeeDto;
+import com.util.feign.UserResponse;
 import com.util.resource.entity.Room;
 import com.util.resource.service.RoomService;
 import com.util.utils.UriCreator;
@@ -62,7 +62,7 @@ public class RoomBookController {
         calendar.setContent(content);
         calendar.setStartTime(requestBody.getBookStart());
         calendar.setEndTime(requestBody.getBookEnd());
-        SingleResponseDto<EmployeeDto> employeeDto = authFeignClient.getEmployeeById(employeeId);
+        UserResponse employeeDto = authFeignClient.getEmployeeById(employeeId);
         calendar.setDepartmentId(employeeDto.getData().getDepartmentId());
 
         calendar.setRoomBook(createRoomBook);

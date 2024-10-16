@@ -7,7 +7,6 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +29,7 @@ public class Car {
     @CollectionTable(name = "car_images", joinColumns = @JoinColumn(name = "car_id"))
     @MapKeyColumn(name = "car_image_url")
     @Column(name = "car_image_description")
-    private Map<String, String> images = new LinkedHashMap<>();
+    private List<Map<String, String>> images = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)
     @Column(name = "car_fuel_type")
