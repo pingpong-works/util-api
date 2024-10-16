@@ -39,8 +39,6 @@ public class CarDto {
 
         private Map<String, String> images;
 
-        private List<String> imagesToDelete;
-
         private Boolean available;
     }
 

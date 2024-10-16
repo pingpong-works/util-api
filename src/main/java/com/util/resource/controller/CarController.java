@@ -43,9 +43,7 @@ public class CarController {
                                    @RequestParam("employeeId") @Positive long employeeId) {
         Car car = mapper.carPatchDtoToCar(requestBody);
 
-        List<String> imagesToDelete = requestBody.getImagesToDelete();
-
-        Car updateCar = carService.updateCar(car, carId, employeeId, imagesToDelete);
+        Car updateCar = carService.updateCar(car, carId, employeeId);
         return new ResponseEntity<>(
                 new SingleResponseDto<>(mapper.carToCarResponseDto(updateCar)), HttpStatus.OK);
     }

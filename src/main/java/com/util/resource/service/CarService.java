@@ -38,7 +38,7 @@ public class CarService {
         return carRepository.save(car);
     }
 
-    public Car updateCar(Car car, long carId, long employeeId, List<String> imagesToDelete) {
+    public Car updateCar(Car car, long carId, long employeeId) {
         Car findCar = findVerifiedCar(carId);
 
         UserResponse employeeDto = authFeignClient.getEmployeeById(employeeId);
@@ -61,9 +61,12 @@ public class CarService {
                 .ifPresent(fuelType -> findCar.setFuel(fuelType));
 
         Optional.ofNullable(car.getImages())
-                .ifPresent(newImages -> findCar.getImages().putAll(newImages));
-        Optional.ofNullable(imagesToDelete)
-                .ifPresent(toDelete -> toDelete.forEach(url -> findCar.getImages().remove(url)));
+                .ifPresent(newImage -> {
+                    findCar.getImages().clear();
+                    newImage.forEach((url, description) -> {
+                        findCar.getImages().put(url, description);
+                    });
+                });
 
         return carRepository.save(findCar);
     }
