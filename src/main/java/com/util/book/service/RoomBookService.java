@@ -8,6 +8,9 @@ import com.util.exception.BusinessLogicException;
 import com.util.exception.ExceptionCode;
 import com.util.feign.AuthFeignClient;
 import com.util.feign.UserResponse;
+import com.util.resource.entity.Room;
+import com.util.resource.repository.RoomRepository;
+import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,13 +25,15 @@ public class RoomBookService {
     private final AuthFeignClient authFeignClient;
     private final UtilProducer utilProducer;
     private final CalendarRepository calendarRepository;
+    private final RoomRepository roomRepository;
 
     public RoomBookService(RoomBookRepository roomBookRepository,
-                           AuthFeignClient authFeignClient, UtilProducer utilProducer, CalendarRepository calendarRepository) {
+                           AuthFeignClient authFeignClient, UtilProducer utilProducer, CalendarRepository calendarRepository, RoomRepository roomRepository) {
         this.roomBookRepository = roomBookRepository;
         this.authFeignClient = authFeignClient;
         this.utilProducer = utilProducer;
         this.calendarRepository = calendarRepository;
+        this.roomRepository = roomRepository;
     }
 
     public RoomBook createRoomBook(RoomBook roomBook, long employeeId) throws IllegalArgumentException {
@@ -95,6 +100,12 @@ public class RoomBookService {
                 .ifPresent(t -> findRoomBook.getCalendar().setTitle(t));
         Optional.ofNullable(content)
                 .ifPresent(c -> findRoomBook.getCalendar().setContent(c));
+        Optional.ofNullable(roomBook.getRoom().getRoomId())
+                .ifPresent(newRoomId -> {
+                    Room newRoom = roomRepository.findById(newRoomId)
+                            .orElseThrow(() -> new ResourceNotFoundException("Room not found"));
+                    findRoomBook.setRoom(newRoom);
+                });
         Optional.ofNullable(roomBook.getBookStart())
                 .ifPresent(bookStart -> findRoomBook.setBookStart(bookStart));
         Optional.ofNullable(roomBook.getBookStart())

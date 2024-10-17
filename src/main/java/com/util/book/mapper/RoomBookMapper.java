@@ -12,6 +12,7 @@ public interface RoomBookMapper {
 
     RoomBook roomBookPostDtoToRoomBook(RoomBookDto.Post requestBody);
 
+    @Mapping(source = "roomId", target = "room.roomId")
     RoomBook roomBookPatchDtoToRoomBook(RoomBookDto.Patch requestBody);
 
     @Mapping(source = "room.roomId", target = "roomId")

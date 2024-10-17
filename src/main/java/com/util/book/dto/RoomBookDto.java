@@ -28,6 +28,8 @@ public class RoomBookDto {
     @Getter
     @AllArgsConstructor
     public static class Patch {
+        private Long roomId;
+
         private LocalDateTime bookStart;
 
         private LocalDateTime bookEnd;

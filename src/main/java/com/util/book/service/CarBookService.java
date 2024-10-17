@@ -8,6 +8,9 @@ import com.util.exception.BusinessLogicException;
 import com.util.exception.ExceptionCode;
 import com.util.feign.AuthFeignClient;
 import com.util.feign.UserResponse;
+import com.util.resource.entity.Car;
+import com.util.resource.repository.CarRepository;
+import org.apache.kafka.common.errors.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,13 +25,15 @@ public class CarBookService {
     private final AuthFeignClient authFeignClient;
     private final UtilProducer utilProducer;
     private final CalendarRepository calendarRepository;
+    private final CarRepository carRepository;
 
     public CarBookService(CarBookRepository carBookRepository,
-                          AuthFeignClient authFeignClient, UtilProducer utilProducer, CalendarRepository calendarRepository) {
+                          AuthFeignClient authFeignClient, UtilProducer utilProducer, CalendarRepository calendarRepository, CarRepository carRepository) {
         this.carBookRepository = carBookRepository;
         this.authFeignClient = authFeignClient;
         this.utilProducer = utilProducer;
         this.calendarRepository = calendarRepository;
+        this.carRepository = carRepository;
     }
 
     public CarBook createCarBook(CarBook carBook, long employeeId) throws IllegalArgumentException {
@@ -93,6 +98,12 @@ public class CarBookService {
                 .ifPresent(t -> findCarBook.getCalendar().setTitle(t));
         Optional.ofNullable(content)
                 .ifPresent(c -> findCarBook.getCalendar().setContent(c));
+        Optional.ofNullable(carBook.getCar().getCarId())
+                .ifPresent(newCarId -> {
+                    Car newCar = carRepository.findById(newCarId)
+                            .orElseThrow(() -> new ResourceNotFoundException("Car not found"));
+                    findCarBook.setCar(newCar);
+                });
         Optional.ofNullable(carBook.getBookStart())
                 .ifPresent(bookStart -> findCarBook.setBookStart(bookStart));
         Optional.ofNullable(carBook.getBookStart())

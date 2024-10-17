@@ -29,6 +29,8 @@ public class CarBookDto {
     @Getter
     @AllArgsConstructor
     public static class Patch {
+        private Long carId;
+
         private LocalDateTime bookStart;
 
         private LocalDateTime bookEnd;

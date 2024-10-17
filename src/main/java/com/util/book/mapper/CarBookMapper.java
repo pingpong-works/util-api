@@ -12,6 +12,7 @@ public interface CarBookMapper {
 
     CarBook carBookPostDtoToCarBook(CarBookDto.Post requestBody);
 
+    @Mapping(source = "carId", target = "car.carId")
     CarBook carBookPatchDtoToCarBook(CarBookDto.Patch requestBody);
 
     @Mapping(source = "car.carId", target = "carId")
