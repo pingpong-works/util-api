@@ -68,7 +68,7 @@ public class RoomBookController {
         calendar.setRoomBook(createRoomBook);
         createRoomBook.setCalendar(calendar);
 
-        calendarService.createCalendar(calendar, employeeId);
+        calendarService.createCalendar(calendar, employeeDto.getData().getDepartmentId());
 
         URI location = UriCreator.createUri(ROOM_BOOK_DEFAULT_URL.replace("{room-id}", String.valueOf(roomId)), createRoomBook.getRoomBookId());
         return ResponseEntity.created(location).build();

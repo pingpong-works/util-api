@@ -68,7 +68,7 @@ public class CarBookController {
         calendar.setCarBook(createCarBook);
         createCarBook.setCalendar(calendar);
 
-        calendarService.createCalendar(calendar, employeeId);
+        calendarService.createCalendar(calendar, employeeDto.getData().getDepartmentId());
 
         URI location = UriCreator.createUri(CAR_BOOK_DEFAULT_URL.replace("{car-id}", String.valueOf(carId)), createCarBook.getCarBookId());
         return ResponseEntity.created(location).build();
